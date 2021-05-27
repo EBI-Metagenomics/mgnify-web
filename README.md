@@ -7,7 +7,7 @@ Components
 
 ## Requirements
 
-Make, Docker and Docker-Compose.
+Make, Docker, Docker-Compose, nodejs.
 
 ### Setup
 
@@ -51,11 +51,15 @@ The API will run using docker-compose (to run mysql, mongo and django).
 make api
 ```
 
+The api will be avaiable in `http://localhost:8000/metagenomics/api`
+
 ### WebClient
 
 ```bash
 make client
 ```
+
+The webclient will be avaiable in `http://localhost:9000/metagenomics`
 
 ## API
 
