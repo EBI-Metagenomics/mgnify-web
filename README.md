@@ -14,7 +14,7 @@ Make, Docker, Docker-Compose, nodejs.
 Clone the repo and the submodules
 
 ```
-git clone --recurse-submodules <repo>
+git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git 
 ```
 
 #### API DB
