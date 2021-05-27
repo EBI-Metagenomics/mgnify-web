@@ -1,0 +1,9 @@
+[submodule "emgapi"]
+	path = emgapi
+	url = git@github.com:EBI-Metagenomics/emgapi.git
+[submodule "ebi-metagenomics-client"]
+	path = ebi-metagenomics-client
+	url = git@github.com:EBI-Metagenomics/ebi-metagenomics-client.git
+[submodule "ebi-metagenomics-webkit"]
+	path = ebi-metagenomics-webkit
+	url = git@github.com:EBI-Metagenomics/ebi-metagenomics-webkit.git

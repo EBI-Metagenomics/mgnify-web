@@ -1,0 +1,35 @@
+version: '3'
+services: 
+
+  mysql:
+    image: mysql:5.6
+    environment:
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+      - MYSQL_DATABASE=emg
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  mongodb:
+    image: mongo:3.4
+    ports:
+      - "27017:27017"
+
+  api:
+    build:
+      context: ./emgapi/
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./emgapi/:/opt/emgapi
+    ports:
+      - "8000:8000"
+    links:
+      - mysql
+      - mongodb
+    environment:
+      - PYTHONUNBUFFERED=0
+
+
+volumes:
+   mysql-data:
