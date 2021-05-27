@@ -17,12 +17,26 @@ Clone the repo and the submodules
 git clone --recurse-submodules <repo>
 ```
 
+#### API DB
+
+You can either use a db dump or an empty db.
+
+##### Restore dump
+
 Some manual intervention is required to populate the API database.
 
 You need to get a dump of the MySQL database, for that refer to the documentation in confluence.
 
 ```bash
 make mysql-restore /path/emg_schema_dump.sql
+```
+
+##### Empty DB
+
+Run the django migrations to get the DB in shape
+
+```bash
+make manage migrate
 ```
 
 ## Running the project
