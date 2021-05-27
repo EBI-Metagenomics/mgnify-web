@@ -55,6 +55,13 @@ The api will be avaiable in `http://localhost:8000/metagenomics/api`
 
 ### WebClient
 
+Install npm modules
+```bash
+make npm run build
+```
+
+run the webpack dev server
+
 ```bash
 make client
 ```
