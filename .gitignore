@@ -1,0 +1,4 @@
+# IntelliJ project structure files
+*.iml
+*.xml
+.idea/

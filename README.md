@@ -7,7 +7,7 @@ Components
 
 ## Requirements
 
-Make, Docker, Docker-Compose, nodejs.
+Make, Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
 
 ### Setup
 

@@ -29,6 +29,7 @@ services:
       - mongodb
     environment:
       - PYTHONUNBUFFERED=0
+      - EMG_CONFIG=config/local.yml
 
 
 volumes:
