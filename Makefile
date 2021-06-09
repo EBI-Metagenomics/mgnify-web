@@ -3,7 +3,8 @@ SHELL := /bin/bash
 .PHONY: api manage client npm mysql-restore mysql-query test-db-reset api-superuser clean update update down up
 
 api: up
-	docker-compose exec -w /opt/emgapi api bash manage.sh runserver 0.0.0.0:8000
+	docker-compose exec -w /opt/emgapi api bash manage.sh collectstatic --noinput
+	docker-compose exec -w /opt/emgapi api bash manage.sh runserver 0.0.0.0:8000 --nostatic
 
 # django manage command
 manage: up
