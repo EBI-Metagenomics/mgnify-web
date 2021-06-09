@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: api manage client npm mysql-restore mysql-query test-db-reset clean update update down up
+.PHONY: api manage client npm mysql-restore mysql-query test-db-reset api-superuser clean update update down up
 
 api: up
 	docker-compose exec -w /opt/emgapi api bash manage.sh runserver 0.0.0.0:8000
@@ -134,6 +134,12 @@ test-db-reset: up
 	$(MAKE) manage "import_kegg_classes ${EMG_CONTAINER_FIXTURES_PATH}/kegg_class_orthology.json"
 	$(MAKE) manage "import_cog_descriptions ${EMG_CONTAINER_FIXTURES_PATH}/cog.csv"
 	$(MAKE) manage "import_genomes ${EMG_CONTAINER_GENOMES_PATH} 1.0"
+
+api-superuser:
+	# Make a Django superuser
+	echo -e "\033[0;31m ***Creating django superuser. Username ${USER}, but you need to set a password.*** \033[0m"
+	$(MAKE) manage "createsuperuser --username ${USER} --email ${USER}@ebi.ac.uk"  # will prompt for password
+	echo "Django admin console is at 0.0.0.0:8000/admin"
 
 clean:
 	docker-compose down -v
