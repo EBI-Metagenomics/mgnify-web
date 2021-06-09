@@ -1,0 +1,1 @@
+../ebi-metagenomics-client/ci/ena_db.sql

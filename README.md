@@ -7,7 +7,7 @@ Components
 
 ## Requirements
 
-Make, Docker, Docker-Compose, nodejs.
+Make, Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
 
 ### Setup
 
@@ -19,7 +19,7 @@ git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git
 
 #### API DB
 
-You can either use a db dump or an empty db.
+You can either use a db dump, a minimal-ish test db, or an empty db.
 
 ##### Restore dump
 
@@ -31,6 +31,17 @@ You need to get a dump of the MySQL database, for that refer to the documentatio
 make mysql-restore /path/emg_schema_dump.sql
 ```
 
+##### Reset to a minimal test db.
+This uses the fixtures and SQL dumps from the `ebi-metagenomics-client` CI (tests).
+
+Those fixtures/SQL dumps/datafiles should already be in place in the client submodule of this repo.
+
+WARNING: If this isn’t your first time using it, you’ll lose any existing data from the mysql container.
+
+```bash
+make test-db-reset
+```
+
 ##### Empty DB
 
 Run the django migrations to get the DB in shape
@@ -38,6 +49,16 @@ Run the django migrations to get the DB in shape
 ```bash
 make manage migrate
 ```
+
+##### Django admin superuser
+
+You can add a Django superuser to the database, so you can use the Django Admin console.
+
+```bash
+make api-superuser
+```
+This picks up your local USER for username, but you set a password interactively (or set the `DJANGO_SUPERUSER_PASSWORD` env var).
+Then you can log into the [Django admin console](http://0.0.0.0:8000/admin)
 
 ## Running the project
 
@@ -51,7 +72,7 @@ The API will run using docker-compose (to run mysql, mongo and django).
 make api
 ```
 
-The api will be avaiable in `http://localhost:8000/metagenomics/api`
+The api will be available in `http://localhost:8000/metagenomics/api`
 
 ### WebClient
 
@@ -66,7 +87,7 @@ run the webpack dev server
 make client
 ```
 
-The webclient will be avaiable in `http://localhost:9000/metagenomics`
+The webclient will be available in `http://localhost:9000/metagenomics`
 
 ## API
 
