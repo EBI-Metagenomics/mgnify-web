@@ -11,6 +11,9 @@ manage: up
 	docker-compose exec -w /opt/emgapi api bash manage.sh \
 		$(filter-out $@,$(MAKECMDGOALS))
 
+test: up
+	docker-compose exec -w /opt/emgapi api python3 setup.py test
+
 # npm run for the webclient
 client:
 	source ebi-metagenomics-client/env-config.sh && \
