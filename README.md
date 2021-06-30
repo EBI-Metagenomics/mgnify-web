@@ -32,14 +32,20 @@ make mysql-restore /path/emg_schema_dump.sql
 ```
 
 ##### Reset to a minimal test db.
-This uses the fixtures and SQL dumps from the `ebi-metagenomics-client` CI (tests).
+This uses the fixtures and SQL dumps from the `ebi-metagenomics-client` or `ebi-metagenomics-webkit` CI (tests).
 
 Those fixtures/SQL dumps/datafiles should already be in place in the client submodule of this repo.
+The fixtures are slightly different between webkit and client, so you can pick which to load.
+This is helpful for running webkit or client tests locally.
 
 WARNING: If this isn’t your first time using it, you’ll lose any existing data from the mysql container.
 
 ```bash
-make test-db-reset
+make test-db-reset ebi-metagenomics-client/ci
+```
+or
+```bash
+make test-db-reset ebi-metagenomics-webkit/ci
 ```
 
 ##### Empty DB
@@ -101,4 +107,31 @@ make manage <django-command>
 To run the webclient npm tasks
 ```
 make npm run <npm task> 
+```
+
+## Tests
+On github, these are run by .github/workflows/test.yml in a similar-ish way.
+### Webkit
+```bash
+make test-db-reset ebi-metagenomics-webkit/ci
+cd ebi-metagenomics-webkit
+API_URL=localhost:8000/v1 npm run test:single
+``` 
+
+### Client
+```bash
+make test-db-reset ebi-metagenomics-client/ci
+make api
+
+#(in a new terminal)
+make client
+
+#(in a new terminal)
+cd ebi-metagenomics-client
+API_URL=http://localhost:8000/v1/ npx cypress run  # or e.g. npx cypress run -s "ci/integration/browse.js" to run a single test
+```
+
+### API
+```bash
+make test-api
 ```

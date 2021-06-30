@@ -1,6 +1,14 @@
 SHELL := /bin/bash
 
-.PHONY: api manage client npm mysql-restore mysql-query test-db-reset api-superuser clean update update down up
+.PHONY: api manage client npm mysql-restore mysql-query test-db-reset api-superuser clean update update down up _check-before-test test-api test-webkit
+
+EMG_DB = emg
+EMG_ENA_DB = ena
+EMG_HOST_RESULT_PATH = emgapi/results
+EMG_HOST_GENOMES_PATH = emgapi/genomes
+EMG_CONTAINER_RESULT_PATH = /opt/emgapi/results
+EMG_CONTAINER_GENOMES_PATH = /opt/emgapi/genomes
+EMG_CONTAINER_FIXTURES_PATH = /opt/emgapi/fixtures
 
 api: up
 	docker-compose exec -w /opt/emgapi api bash manage.sh collectstatic --noinput
@@ -11,7 +19,24 @@ manage: up
 	docker-compose exec -w /opt/emgapi api bash manage.sh \
 		$(filter-out $@,$(MAKECMDGOALS))
 
-test: up
+_check-before-test: up
+	echo -e "\033[0;31m ***DESTRUCTIVE! Local databases ${EMG_DB} and {EMG_ENA_DB}, will be dropped to replace with test fixtures.*** \033[0m"
+	@echo -n "Continue? [y/N] " && read ans && [ $${ans:-N} = y ]
+
+test-api: _check-before-test
+	$(MAKE) mysql-query "DROP DATABASE ${EMG_DB};" || echo "No EMG db to drop"
+	$(MAKE) mysql-query "DROP DATABASE ${EMG_ENA_DB};" || echo "No ENA db to drop"
+	$(MAKE) mysql-query "CREATE DATABASE ${EMG_DB};"
+	$(MAKE) mysql-query "CREATE DATABASE ${EMG_ENA_DB};"
+	$(MAKE) mysql-query "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES';"
+	docker-compose exec -w /opt/emgapi api pip3 install -U git+git://github.com/EBI-Metagenomics/emg-backlog-schema.git
+	docker-compose exec -w /opt/emgapi api pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
+	docker-compose exec -w /opt/emgapi api pip3 install -U -r requirements-test.txt
+	docker-compose exec -w /opt/emgapi api pip3 install "flake8==3.4" "pycodestyle==2.3.1" pep8-naming
+	docker-compose exec -w /opt/emgapi api pip3 install "git+git://github.com/EBI-Metagenomics/django-rest-framework-json-api@develop#egg=djangorestframework-jsonapi"
+	docker-compose exec -w /opt/emgapi api python3 setup.py sdist
+	docker-compose exec -w /opt/emgapi api pip3 install -U .
+	docker-compose exec -w /opt/emgapi api pip3 freeze
 	docker-compose exec -w /opt/emgapi api python3 setup.py test
 
 # npm run for the webclient
@@ -37,14 +62,6 @@ mysql-query: up
 		--default-character-set=utf8 --comments \
 		-e "$(filter-out $@,$(MAKECMDGOALS))"
 
-EMG_DB = emg
-EMG_ENA_DB = ena
-EMG_HOST_RESULT_PATH = emgapi/results
-EMG_HOST_GENOMES_PATH = emgapi/genomes
-EMG_CONTAINER_RESULT_PATH = /opt/emgapi/results
-EMG_CONTAINER_GENOMES_PATH = /opt/emgapi/genomes
-EMG_CONTAINER_FIXTURES_PATH = /opt/emgapi/fixtures
-
 test-db-reset: up
 	# Start with fresh databases
 	$(MAKE) mysql-query "DROP DATABASE ${EMG_DB};" || echo "No EMG db to drop"
@@ -56,13 +73,13 @@ test-db-reset: up
 	docker-compose exec -T mysql mysql --host=0.0.0.0 \
 				--user=root --port=3306 \
 				--default-character-set=utf8 --comments \
-				--database=${EMG_ENA_DB} < test-db-setup/ena_db.sql
+				--database=${EMG_ENA_DB} < $(filter-out $@,$(MAKECMDGOALS))/ena_db.sql
 
 	$(MAKE) manage migrate
 
 	# Place MYSQL fixtures from CI
 	$(MAKE) mysql-query "SET FOREIGN_KEY_CHECKS = 0;"
-	for fixture in test-db-setup/emg_sql_fixtures/*.sql; do \
+	for fixture in $(filter-out $@,$(MAKECMDGOALS))/emg_sql_fixtures/*.sql; do \
 		echo $$fixture; \
 		$(MAKE) mysql-restore $$fixture; \
 	done
@@ -71,10 +88,10 @@ test-db-reset: up
 	# Place results datafiles from CI
 	rm -rf "${EMG_HOST_RESULT_PATH}"
 	rm -rf "${EMG_HOST_GENOMES_PATH}"
-	cp -R test-db-setup/emg_api_datafiles/results "${EMG_HOST_RESULT_PATH}"
-	cp -R test-db-setup/emg_api_datafiles/genomes "${EMG_HOST_GENOMES_PATH}"
-	mkdir -p   ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_2.0/project-summary;
-	mkdir -p   ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_4.0/project-summary;
+	cp -R $(filter-out $@,$(MAKECMDGOALS))/emg_api_datafiles/results "${EMG_HOST_RESULT_PATH}"
+	cp -R $(filter-out $@,$(MAKECMDGOALS))/emg_api_datafiles/genomes "${EMG_HOST_GENOMES_PATH}"
+	mkdir -p ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_2.0/project-summary;
+	mkdir -p ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_4.0/project-summary;
 
 	touch  ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/google-map-sample-data.json;
 	touch  ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_2.0/project-summary/BP_GO_abundances_v2.0.tsv;
