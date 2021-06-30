@@ -128,7 +128,9 @@ make client
 
 #(in a new terminal)
 cd ebi-metagenomics-client
-API_URL=http://localhost:8000/v1/ npx cypress run  # or e.g. npx cypress run -s "ci/integration/browse.js" to run a single test
+API_URL=http://localhost:8000/v1/ npx cypress run  # or e.g. npx cypress run -s "cypress/integration/browse.js" to run a single test
+#or for an interactive testing experience:
+API_URL=http://localhost:8000/v1/ npx cypress open
 ```
 
 ### API
