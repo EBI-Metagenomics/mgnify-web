@@ -19,15 +19,12 @@ manage: up
 	docker-compose exec -w /opt/emgapi api bash manage.sh \
 		$(filter-out $@,$(MAKECMDGOALS))
 
-_check-before-test: up
-	echo -e "\033[0;31m ***DESTRUCTIVE! Local databases ${EMG_DB} and {EMG_ENA_DB}, will be dropped to replace with test fixtures.*** \033[0m"
-	@echo -n "Continue? [y/N] " && read ans && [ $${ans:-N} = y ]
 
-test-api: _check-before-test
-	$(MAKE) mysql-query "DROP DATABASE ${EMG_DB};" || echo "No EMG db to drop"
-	$(MAKE) mysql-query "DROP DATABASE ${EMG_ENA_DB};" || echo "No ENA db to drop"
-	$(MAKE) mysql-query "CREATE DATABASE ${EMG_DB};"
-	$(MAKE) mysql-query "CREATE DATABASE ${EMG_ENA_DB};"
+test-api:
+	$(MAKE) mysql-query "DROP DATABASE emg_tests;" || echo "No emg_tests db to drop"
+	#$(MAKE) mysql-query "DROP DATABASE ${EMG_ENA_DB};" || echo "No ENA db to drop"
+	$(MAKE) mysql-query "CREATE DATABASE emg_tests;"
+	#$(MAKE) mysql-query "CREATE DATABASE ${EMG_ENA_DB};"
 	$(MAKE) mysql-query "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES';"
 	docker-compose exec -w /opt/emgapi api pip3 install -U git+git://github.com/EBI-Metagenomics/emg-backlog-schema.git
 	docker-compose exec -w /opt/emgapi api pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
@@ -37,7 +34,7 @@ test-api: _check-before-test
 	docker-compose exec -w /opt/emgapi api python3 setup.py sdist
 	docker-compose exec -w /opt/emgapi api pip3 install -U .
 	docker-compose exec -w /opt/emgapi api pip3 freeze
-	docker-compose exec -w /opt/emgapi api python3 setup.py test
+	docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/tests.yml api python3 setup.py test
 
 # npm run for the webclient
 client:
@@ -85,7 +82,7 @@ test-db-reset: up
 	done
 	$(MAKE) mysql-query "SET FOREIGN_KEY_CHECKS = 1;"
 
-	# Place results datafiles from CI
+	# Place results datafiles and genomes from CI
 	rm -rf "${EMG_HOST_RESULT_PATH}"
 	rm -rf "${EMG_HOST_GENOMES_PATH}"
 	cp -R $(filter-out $@,$(MAKECMDGOALS))/emg_api_datafiles/results "${EMG_HOST_RESULT_PATH}"
@@ -154,7 +151,7 @@ test-db-reset: up
 	$(MAKE) manage "import_kegg_modules ${EMG_CONTAINER_FIXTURES_PATH}/kegg_module_orthology.json"
 	$(MAKE) manage "import_kegg_classes ${EMG_CONTAINER_FIXTURES_PATH}/kegg_class_orthology.json"
 	$(MAKE) manage "import_cog_descriptions ${EMG_CONTAINER_FIXTURES_PATH}/cog.csv"
-	$(MAKE) manage "import_genomes ${EMG_CONTAINER_GENOMES_PATH} 1.0"
+	$(MAKE) manage "import_genomes ${EMG_CONTAINER_GENOMES_PATH} hgut 1.0 root:Host-Associated:Human:Digestive_System:Large_intestine"
 
 api-superuser:
 	# Make a Django superuser
