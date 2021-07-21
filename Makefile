@@ -34,7 +34,7 @@ test-api:
 	docker-compose exec -w /opt/emgapi api python3 setup.py sdist
 	docker-compose exec -w /opt/emgapi api pip3 install -U .
 	docker-compose exec -w /opt/emgapi api pip3 freeze
-	docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/tests.yml api python3 setup.py test
+	docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/local-tests.yml api python3 setup.py test
 
 # npm run for the webclient
 client:

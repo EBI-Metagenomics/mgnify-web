@@ -31,6 +31,19 @@ services:
       - PYTHONUNBUFFERED=0
       - EMG_CONFIG=config/local.yml
 
+  api-tests:
+    build:
+      context: ./emgapi/
+      dockerfile: docker/tests.Dockerfile
+    volumes:
+    - ./emgapi:/opt/emgapi
+    links:
+      - mysql
+      - mongodb
+    environment:
+      - PYTHONUNBUFFERED=0
+      - EMG_CONFIG=config/local-tests.yml
+
 
 volumes:
    mysql-data:
