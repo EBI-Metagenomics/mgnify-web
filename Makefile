@@ -26,15 +26,15 @@ test-api:
 	$(MAKE) mysql-query "CREATE DATABASE emg_tests;"
 	#$(MAKE) mysql-query "CREATE DATABASE ${EMG_ENA_DB};"
 	$(MAKE) mysql-query "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES';"
-	docker-compose exec -w /opt/emgapi api pip3 install -U git+git://github.com/EBI-Metagenomics/emg-backlog-schema.git
-	docker-compose exec -w /opt/emgapi api pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
-	docker-compose exec -w /opt/emgapi api pip3 install -U -r requirements-test.txt
-	docker-compose exec -w /opt/emgapi api pip3 install "flake8==3.4" "pycodestyle==2.3.1" pep8-naming
-	docker-compose exec -w /opt/emgapi api pip3 install "git+git://github.com/EBI-Metagenomics/django-rest-framework-json-api@develop#egg=djangorestframework-jsonapi"
-	docker-compose exec -w /opt/emgapi api python3 setup.py sdist
-	docker-compose exec -w /opt/emgapi api pip3 install -U .
-	docker-compose exec -w /opt/emgapi api pip3 freeze
-	docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/local-tests.yml api python3 setup.py test
+	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/emg-backlog-schema.git
+	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
+	docker-compose exec -w /opt/emgapi api-tests pip3 install -U -r requirements-test.txt
+	docker-compose exec -w /opt/emgapi api-tests pip3 install "flake8==3.4" "pycodestyle==2.3.1" pep8-naming
+	docker-compose exec -w /opt/emgapi api-tests pip3 install "git+git://github.com/EBI-Metagenomics/django-rest-framework-json-api@develop#egg=djangorestframework-jsonapi"
+	docker-compose exec -w /opt/emgapi api-tests python3 setup.py sdist
+	docker-compose exec -w /opt/emgapi api-tests pip3 install -U .
+	docker-compose exec -w /opt/emgapi api-tests pip3 freeze
+	docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/local-tests.yml api-tests python3 setup.py test
 
 # npm run for the webclient
 client:
