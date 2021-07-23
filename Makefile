@@ -22,10 +22,9 @@ manage: up
 
 test-api:
 	$(MAKE) mysql-query "DROP DATABASE emg_tests;" || echo "No emg_tests db to drop"
-	#$(MAKE) mysql-query "DROP DATABASE ${EMG_ENA_DB};" || echo "No ENA db to drop"
 	$(MAKE) mysql-query "CREATE DATABASE emg_tests;"
-	#$(MAKE) mysql-query "CREATE DATABASE ${EMG_ENA_DB};"
 	$(MAKE) mysql-query "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES';"
+	docker-compose exec mongodb mongo emg_tests --eval 'db.dropDatabase()'
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/emg-backlog-schema.git
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U -r requirements-test.txt
