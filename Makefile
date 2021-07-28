@@ -5,9 +5,9 @@ SHELL := /bin/bash
 EMG_DB = emg
 EMG_ENA_DB = ena
 EMG_HOST_RESULT_PATH = emgapi/results
-EMG_HOST_GENOMES_PATH = emgapi/genomes
+EMG_HOST_GENOMES_PATH = emgapi/results/genomes
 EMG_CONTAINER_RESULT_PATH = /opt/emgapi/results
-EMG_CONTAINER_GENOMES_PATH = /opt/emgapi/genomes
+EMG_CONTAINER_GENOMES_PATH = /opt/emgapi/results/genomes
 EMG_CONTAINER_FIXTURES_PATH = /opt/emgapi/fixtures
 
 api: up
