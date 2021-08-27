@@ -7,7 +7,6 @@ EMG_ENA_DB = ena
 EMG_HOST_RESULT_PATH = emgapi/results
 EMG_HOST_GENOMES_PATH = emgapi/results/genomes
 EMG_CONTAINER_RESULT_PATH = /opt/emgapi/results
-EMG_CONTAINER_GENOMES_PATH = /opt/emgapi/results/genomes
 EMG_CONTAINER_FIXTURES_PATH = /opt/emgapi/fixtures
 
 api: up
@@ -150,7 +149,7 @@ test-db-reset: up
 	$(MAKE) manage "import_kegg_modules ${EMG_CONTAINER_FIXTURES_PATH}/kegg_module_orthology.json"
 	$(MAKE) manage "import_kegg_classes ${EMG_CONTAINER_FIXTURES_PATH}/kegg_class_orthology.json"
 	$(MAKE) manage "import_cog_descriptions ${EMG_CONTAINER_FIXTURES_PATH}/cog.csv"
-	$(MAKE) manage "import_genomes ${EMG_CONTAINER_GENOMES_PATH} hgut/1.0 Human\ Gut 1.0 root:Host-Associated:Human:Digestive\ System:Large\ intestine"
+	$(MAKE) manage "import_genomes ${EMG_CONTAINER_RESULT_PATH} genomes/hgut/1.0 Human\ Gut 1.0 root:Host-Associated:Human:Digestive\ System:Large\ intestine"
 
 api-superuser:
 	# Make a Django superuser
