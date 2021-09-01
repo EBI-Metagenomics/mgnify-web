@@ -114,8 +114,11 @@ On github, these are run by .github/workflows/test.yml in a similar-ish way.
 ### Webkit
 ```bash
 make test-db-reset ebi-metagenomics-webkit/ci
+make api
+
+#(in a new terminal)
 cd ebi-metagenomics-webkit
-API_URL=localhost:8000/v1 npm run test:single
+API_URL=localhost:8000/v1/ npm run test:single
 ``` 
 
 ### Client
