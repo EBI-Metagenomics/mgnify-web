@@ -84,7 +84,6 @@ test-db-reset: up
 	rm -rf "${EMG_HOST_RESULT_PATH}"
 	rm -rf "${EMG_HOST_GENOMES_PATH}"
 	cp -R $(filter-out $@,$(MAKECMDGOALS))/emg_api_datafiles/results "${EMG_HOST_RESULT_PATH}"
-	cp -R $(filter-out $@,$(MAKECMDGOALS))/emg_api_datafiles/genomes "${EMG_HOST_GENOMES_PATH}"
 	mkdir -p ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_2.0/project-summary;
 	mkdir -p ${EMG_HOST_RESULT_PATH}/2015/03/ERP009703/version_4.0/project-summary;
 
