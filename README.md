@@ -139,4 +139,6 @@ npx cypress open --env API_URL=http://localhost:8000/v1/
 ### API
 ```bash
 make test-api
+#or for specific test/s with file/class/method name matching some string:
+docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/local-tests.yml api-tests pytest -k "PublicationAPI"
 ```
