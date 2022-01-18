@@ -28,7 +28,6 @@ test-api:
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U -r requirements-test.txt
 	docker-compose exec -w /opt/emgapi api-tests pip3 install "flake8==3.4" "pycodestyle==2.3.1" pep8-naming
-	docker-compose exec -w /opt/emgapi api-tests pip3 install "git+git://github.com/EBI-Metagenomics/django-rest-framework-json-api@develop#egg=djangorestframework-jsonapi"
 	docker-compose exec -w /opt/emgapi api-tests python3 setup.py sdist
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U .
 	docker-compose exec -w /opt/emgapi api-tests pip3 freeze
