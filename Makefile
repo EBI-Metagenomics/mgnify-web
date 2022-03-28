@@ -24,8 +24,8 @@ test-api:
 	$(MAKE) mysql-query "CREATE DATABASE emg_tests;"
 	$(MAKE) mysql-query "SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES';"
 	docker-compose exec mongodb mongo emg_tests --eval 'db.dropDatabase()'
-	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/emg-backlog-schema.git
-	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+git://github.com/EBI-Metagenomics/ena-api-handler.git
+	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+https://github.com/EBI-Metagenomics/emg-backlog-schema.git
+	docker-compose exec -w /opt/emgapi api-tests pip3 install -U git+https://github.com/EBI-Metagenomics/ena-api-handler.git
 	docker-compose exec -w /opt/emgapi api-tests pip3 install -U -r requirements-test.txt
 	docker-compose exec -w /opt/emgapi api-tests pip3 install "flake8==3.4" "pycodestyle==2.3.1" pep8-naming
 	docker-compose exec -w /opt/emgapi api-tests python3 setup.py sdist
