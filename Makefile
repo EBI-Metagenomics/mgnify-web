@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 
-.PHONY: api manage client npm mysql-restore mysql-query test-db-reset api-superuser clean update update down up _check-before-test test-api test-webkit
+.PHONY: api manage client npm mysql-restore mysql-query test-db-reset api-superuser clean update update down up _check-before-test test-api
 
 EMG_DB = emg
 EMG_ENA_DB = ena

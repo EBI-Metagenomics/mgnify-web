@@ -2,8 +2,7 @@
 
 Components
 - [emgapi](https://github.com/EBI-Metagenomics/emgapi) - Django RESTful API
-- [ebi-metagenomics-client](https://github.com/EBI-Metagenomics/ebi-metagenomics-client) - BackboneJS FrontEnd
-- [ebi-metagenomics-webkit](https://github.com/EBI-Metagenomics/ebi-metagenomics-webkit) - FrontEnd libraries (visualizations mostly)
+- [ebi-metagenomics-client](https://github.com/EBI-Metagenomics/ebi-metagenomics-client) - React FrontEnd
 
 ## Requirements
 
@@ -32,20 +31,14 @@ make mysql-restore /path/emg_schema_dump.sql
 ```
 
 ##### Reset to a minimal test db.
-This uses the fixtures and SQL dumps from the `ebi-metagenomics-client` or `ebi-metagenomics-webkit` CI (tests).
+This uses the fixtures and SQL dumps from the `ebi-metagenomics-client` CI (tests).
 
 Those fixtures/SQL dumps/datafiles should already be in place in the client submodule of this repo.
-The fixtures are slightly different between webkit and client, so you can pick which to load.
-This is helpful for running webkit or client tests locally.
 
 WARNING: If this isn’t your first time using it, you’ll lose any existing data from the mysql container.
 
 ```bash
 make test-db-reset ebi-metagenomics-client/ci
-```
-or
-```bash
-make test-db-reset ebi-metagenomics-webkit/ci
 ```
 
 ##### Empty DB
@@ -111,15 +104,6 @@ make npm run <npm task>
 
 ## Tests
 On github, these are run by .github/workflows/test.yml in a similar-ish way.
-### Webkit
-```bash
-make test-db-reset ebi-metagenomics-webkit/ci
-make api
-
-#(in a new terminal)
-cd ebi-metagenomics-webkit
-API_URL=localhost:8000/v1/ npm run test:single
-``` 
 
 ### Client
 ```bash
