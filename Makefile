@@ -44,30 +44,22 @@ npm:
 	npm --prefix ebi-metagenomics-client \
 		$(filter-out $@,$(MAKECMDGOALS))
 
-mysql-restore: up
-	docker-compose exec -T mysql mysql --host=0.0.0.0 \
-		--user=root --port=3306 \
-		--default-character-set=utf8 --comments \
-		--database=emg < $(filter-out $@,$(MAKECMDGOALS))
+#mysql-restore: up
+#	docker-compose exec -T mysql mysql --host=0.0.0.0 \
+#		--user=root --port=3306 \
+#		--default-character-set=utf8 --comments \
+#		--database=emg < $(filter-out $@,$(MAKECMDGOALS))
+#
+#mysql-query: up
+#	docker-compose exec -T mysql mysql --host=0.0.0.0 \
+#		--user=root --port=3306 \
+#		--default-character-set=utf8 --comments \
+#		-e "$(filter-out $@,$(MAKECMDGOALS))"
 
-mysql-query: up
-	docker-compose exec -T mysql mysql --host=0.0.0.0 \
-		--user=root --port=3306 \
-		--default-character-set=utf8 --comments \
-		-e "$(filter-out $@,$(MAKECMDGOALS))"
-
-test-db-reset: up
-	# Start with fresh databases
-	$(MAKE) mysql-query "DROP DATABASE ${EMG_DB};" || echo "No EMG db to drop"
-	$(MAKE) mysql-query "DROP DATABASE ${EMG_ENA_DB};" || echo "No ENA db to drop"
-	$(MAKE) mysql-query "CREATE DATABASE ${EMG_DB};"
-	$(MAKE) mysql-query "CREATE DATABASE ${EMG_ENA_DB};"
-
-	# Use ENA database dump from CI
-	docker-compose exec -T mysql mysql --host=0.0.0.0 \
-				--user=root --port=3306 \
-				--default-character-set=utf8 --comments \
-				--database=${EMG_ENA_DB} < $(filter-out $@,$(MAKECMDGOALS))/ena_db.sql
+test-db-reset:
+	rm ebi-metagenomics-client/ci/testdbs/emg-testdb.sqlite
+	docker compose -f docker-compose-lite.yml up -d
+	docker-compose exec -w /opt/emgapi api-lite python3 emgcli/manage.py migrate -v 3
 
 	$(MAKE) manage migrate
 
@@ -170,3 +162,13 @@ up:
 	docker-compose up -d
 %:
 	@:
+
+fixture-api:
+	docker compose -f docker-compose-lite.yml down
+	docker compose -f docker-compose-lite.yml up -d --build
+	docker compose -f docker-compose-lite.yml exec -T  mongodb-lite mongorestore --gzip --archive < ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
+	docker-compose exec -w /opt/emgapi api-lite python3 emgcli/manage.py runserver 0.0.0.0:8000 --nostatic
+
+fixture-api-run:
+	docker compose -f docker-compose-lite.yml up -d
+	docker-compose exec -w /opt/emgapi api-lite python3 emgcli/manage.py runserver 0.0.0.0:8000 --nostatic

@@ -1,0 +1,139 @@
+version: '3'
+
+env:
+  DOCKER_COMPOSE_FILE: docker-compose-lite.yml
+  API_DOCKER_NAME: api-lite
+  MONGO_DOCKER_NAME: mongodb-lite
+  EMG_CONTAINER_RESULT_PATH: /opt/emgapi/results
+  EMG_CONTAINER_FIXTURES_PATH: /opt/emgapi/fixtures
+
+tasks:
+  docker-compose-up:
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} up -d
+
+  manage:
+    cmds:
+      - docker-compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} python3 emgcli/manage.py {{.ARGUMENTS}}
+
+  migrate:
+    cmds:
+      - task: docker-compose-up
+      - task: manage
+        vars:
+          ARGUMENTS: "migrate -v 3"
+
+  restore-mongo-test-db:
+    cmds:
+      - task: docker-compose-up
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongorestore --gzip --archive < ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
+
+  run-api:
+    cmds:
+      - task: docker-compose-up
+      - task: manage
+        vars:
+          ARGUMENTS: "collectstatic --noinput"
+      - task: manage
+        vars:
+          ARGUMENTS: "runserver 0.0.0.0:8000 --nostatic"
+          DOCKER_ARGS: "-d"
+
+  run-client:
+    deps:
+      - run-api
+    cmds:
+      - source ebi-metagenomics-client/env-config.sh
+      - npm --prefix ebi-metagenomics-client run start --watch
+
+  create-test-dbs:
+    cmds:
+      - rm ebi-metagenomics-client/ci/testdbs/emg-testdb.sqlite || echo
+      - rm ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive || echo
+      - rm ebi-metagenomics-client/ci/testdbs/ena-testdb.sqlite || echo
+      - task: docker-compose-up
+      - task: migrate
+      - task: manage
+        vars: { ARGUMENTS: 'create_ena_test_db' }
+
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_taxonomy ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_qc ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .ipr --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_taxonomy ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 2.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_qc ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 2.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .ipr --pipeline 2.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 2.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 2.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_taxonomy ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_qc ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" .ipr --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_taxonomy ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_qc ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERP104236 "{{.EMG_RESULT_PATH}}" .ipr --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 4.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_taxonomy ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_qc ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_contigs ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_RESULT_PATH}}" .ipr --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .pfam --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .gprops --pipeline 5.0' }
+#      - task: manage
+#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .antismash --pipeline 5.0' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_kegg_modules {{.EMG_CONTAINER_FIXTURES_PATH}}/kegg_module_orthology.json' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_kegg_classes {{.EMG_CONTAINER_FIXTURES_PATH}}/kegg_class_orthology.json' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_cog_descriptions {{.EMG_CONTAINER_FIXTURES_PATH}}/cog.csv' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_biomes {{.EMG_CONTAINER_FIXTURES_PATH}}/biome_hierarchy_tree.json'}
+      - task: manage
+        vars: { ARGUMENTS: 'import_variable_names {{.EMG_CONTAINER_FIXTURES_PATH}}/variable_names.json' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_analysis_statuses {{.EMG_CONTAINER_FIXTURES_PATH}}/analysis_statuses.json' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/uhgg/2.0 Human\ Gut 2.0 root:Host-associated:Human:Digestive\ system:Large\ intestine' }
+      - task: manage
+        vars: { ARGUMENTS: 'createsuperuser --noinput --username emgtest --email emgtest@example.com' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_analysis ERZ8153470 root:Host-associated:Human:Digestive\ system ASSEMBLY --rootpath /opt/emgapi/results --pipeline 5.0 --result_status no_tax'}
+        env:
+          DJANGO_SUPERUSER_PASSWORD: emgtest
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongodump --db emg --gzip --archive > ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
+
+
