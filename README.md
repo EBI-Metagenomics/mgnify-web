@@ -6,7 +6,7 @@ Components
 
 ## Requirements
 
-Make, Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
+Make, [Task](https://taskfile.dev/), Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
 
 ### Setup
 
@@ -15,6 +15,11 @@ Clone the repo and the submodules
 ```
 git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git 
 ```
+
+There are **two** Docker-Compose setups available (for local development – these are NOT used in production).
+The primary docker-compose.yml creates an environment with MySQL.
+The lighter weight docker-compose-lite.yml create an environment backed by Sqlite.
+We are migrating towards the latter option.
 
 #### API DB
 
@@ -30,16 +35,12 @@ You need to get a dump of the MySQL database, for that refer to the documentatio
 make mysql-restore /path/emg_schema_dump.sql
 ```
 
-##### Reset to a minimal test db.
-This uses the fixtures and SQL dumps from the `ebi-metagenomics-client` CI (tests).
+##### Using minimal test db.
+A Sqlite database is available in the `ebi-metagenomics-client/ci/testdbs` directory (because this is used in the webclient CI tests).
 
-Those fixtures/SQL dumps/datafiles should already be in place in the client submodule of this repo.
+If you ever need to recreate this, use `task create-test-dbs`. 
+This makes a minimally populated, migrated, Sqlite `emg` db, a very minimal fake `ena` Sqlite, and dumps a Mongo archive.
 
-WARNING: If this isn’t your first time using it, you’ll lose any existing data from the mysql container.
-
-```bash
-make test-db-reset ebi-metagenomics-client/ci
-```
 
 ##### Empty DB
 
@@ -52,6 +53,7 @@ make manage migrate
 ##### Django admin superuser
 
 You can add a Django superuser to the database, so you can use the Django Admin console.
+In the minimal Sqlite dbs, once has been created (username/password: `emgtest`).
 
 ```bash
 make api-superuser
@@ -65,10 +67,15 @@ To run MGnify you will need the API and the WebClient running at the same time.
 
 The API will run using docker-compose (to run mysql, mongo and django). 
 
-### API
+### API (using MySQL)
 
 ```bash
 make api
+```
+
+### API (using Sqlite)
+```bash
+task run-api
 ```
 
 The api will be available in `http://localhost:8000/metagenomics/api`
@@ -77,13 +84,13 @@ The api will be available in `http://localhost:8000/metagenomics/api`
 
 Install npm modules
 ```bash
-make npm run build
+#make npm run build
 ```
 
 run the webpack dev server
 
 ```bash
-make client
+task run-client
 ```
 
 The webclient will be available in `http://localhost:9000/metagenomics`
@@ -91,19 +98,19 @@ The webclient will be available in `http://localhost:9000/metagenomics`
 ## API
 
 To run any django manage command for the API:
-```
-make manage <django-command>
+```shell
+ARGUMENTS='whatever-command' task manage
 ```
 
-## WebClient
-
-To run the webclient npm tasks
-```
-make npm run <npm task> 
+e.g.
+```shell
+ARGUMENTS='migrate 001' task manage
 ```
 
 ## Tests
-On github, these are run by .github/workflows/test.yml in a similar-ish way.
+On GitHub, these are run by .github/workflows/test.yml in a similar-ish way.
+
+# TODO for lite setup
 
 ### Client
 ```bash

@@ -11,6 +11,7 @@ tasks:
   docker-compose-up:
     cmds:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} up -d
+      - docker compose exec -w /opt/emgapi {{.API_DOCKER_NAME}} pip3 install -U git+https://github.com/EBI-Metagenomics/ena-api-handler.git
 
   manage:
     cmds:
