@@ -17,9 +17,15 @@ git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git
 ```
 
 There are **two** Docker-Compose setups available (for local development – these are NOT used in production).
-The primary docker-compose.yml creates an environment with MySQL.
+The docker-compose.yml creates an environment with MySQL (not recommended for most use cases).
 The lighter weight docker-compose-lite.yml create an environment backed by Sqlite.
 We are migrating towards the latter option.
+
+There is a `Makefile`, targeting the MySQL docker containers.
+There is a `Taskfile.yml` targeting the Sqlite setup.
+Again, the latter is recommended unless you really need to work on MySQL-specific things.
+
+Note that MySQL is used on GitHub actions for CI, since it better matches the production setup of this API at EBI.
 
 #### API DB
 
@@ -99,26 +105,21 @@ The webclient will be available in `http://localhost:9000/metagenomics`
 
 To run any django manage command for the API:
 ```shell
-ARGUMENTS='whatever-command' task manage
+task manage -- whatever-command
 ```
+(note the use of ` -- ` to separate arguments for manage.py – this is a [standard Taskfile feature](https://taskfile.dev/usage/#forwarding-cli-arguments-to-commands))
 
 e.g.
 ```shell
-ARGUMENTS='migrate 001' task manage
+task manage -- migrate 001
 ```
 
 ## Tests
 On GitHub, these are run by .github/workflows/test.yml in a similar-ish way.
 
-# TODO for lite setup
-
 ### Client
 ```bash
-make test-db-reset ebi-metagenomics-client/ci
-make api
-
-#(in a new terminal)
-make client
+task run-client
 
 #(in a new terminal)
 cd ebi-metagenomics-client
@@ -129,7 +130,7 @@ npx cypress open --env API_URL=http://localhost:8000/v1/
 
 ### API
 ```bash
-make test-api
+task test-api
 #or for specific test/s with file/class/method name matching some string:
-docker-compose exec -w /opt/emgapi -e EMG_CONFIG=config/local-tests.yml api-tests pytest -k "PublicationAPI"
+task test-api -- -k "PublicationAPI"
 ```

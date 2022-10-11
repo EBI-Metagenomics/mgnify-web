@@ -22,3 +22,17 @@ services:
       - PYTHONUNBUFFERED=0
       - EMG_CONFIG=config/local-lite.yml
       - BACKLOG_CONFIG=config/backlog-local.yml
+
+  api-tests:
+    build:
+      context: ./emgapi/
+      dockerfile: docker/tests.Dockerfile
+    volumes:
+      - ./emgapi/:/opt/emgapi
+      - ./ebi-metagenomics-client/ci/:/opt/ci
+      - ./ebi-metagenomics-client/ci/emg_api_datafiles/results/:/opt/emgapi/results
+    links:
+      - mongodb-lite
+    environment:
+      - PYTHONUNBUFFERED=0
+      - EMG_CONFIG=config/local-tests.yml

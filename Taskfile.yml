@@ -8,14 +8,17 @@ env:
   EMG_CONTAINER_FIXTURES_PATH: /opt/emgapi/fixtures
 
 tasks:
+  dc:
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.CLI_ARGS}}
+
   docker-compose-up:
     cmds:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} up -d
-      - docker compose exec -w /opt/emgapi {{.API_DOCKER_NAME}} pip3 install -U git+https://github.com/EBI-Metagenomics/ena-api-handler.git
 
   manage:
     cmds:
-      - docker-compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} python3 emgcli/manage.py {{.ARGUMENTS}}
+      - docker compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} python3 emgcli/manage.py {{.ARGUMENTS}} {{.CLI_ARGS}}
 
   migrate:
     cmds:
@@ -46,6 +49,13 @@ tasks:
     cmds:
       - source ebi-metagenomics-client/env-config.sh
       - npm --prefix ebi-metagenomics-client run start --watch
+
+  test-api:
+    cmds:
+      - task: docker-compose-up
+        vars:
+            API_DOCKER_NAME: api-tests
+      - docker compose exec -w /opt/emgapi api-tests pytest {{.CLI_ARGS}}
 
   create-test-dbs:
     cmds:
