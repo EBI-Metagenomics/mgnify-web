@@ -59,7 +59,7 @@ make manage migrate
 ##### Django admin superuser
 
 You can add a Django superuser to the database, so you can use the Django Admin console.
-In the minimal Sqlite dbs, once has been created (username/password: `emgtest`).
+In the minimal Sqlite dbs, once has been created (username/password: `emgtest`, `emgemgtesttest`).
 
 ```bash
 make api-superuser
