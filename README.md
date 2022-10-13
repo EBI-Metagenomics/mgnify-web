@@ -1,8 +1,18 @@
 # MGnify
 
-Components
+## Components
 - [emgapi](https://github.com/EBI-Metagenomics/emgapi) - Django RESTful API
 - [ebi-metagenomics-client](https://github.com/EBI-Metagenomics/ebi-metagenomics-client) - React FrontEnd
+
+## Other public MGnify Web repositories
+These repositories are also part of the MGnify web stack, but do not form part of the core service so aren't included as submodules
+
+- [mgnify-sourmash-component](https://github.com/EBI-Metagenomics/mgnify-sourmash-component) - web component to create Sourmash sketches in the browser
+- [genome-search](https://github.com/EBI-Metagenomics/genome-search) - microservice API to perform COBS k-mer gene searches on genomes
+- [sourmash-queue](https://github.com/EBI-Metagenomics/sourmash-queue) - microservice API to perform Sourmash MAG vs MAG searches 
+- [blog](https://github.com/EBI-Metagenomics/blog) - GitHub-pages hosted blog and feed for the MGnify frontpage
+- [EMG-docs](https://github.com/EBI-Metagenomics/EMG-docs) - source for the Sphinx-powered documentation site (ReadTheDocs)
+- [notebooks](https://github.com/EBI-Metagenomics/notebooks) - MGnify Notebooks Server (Jupyter Lab)
 
 ## Requirements
 
