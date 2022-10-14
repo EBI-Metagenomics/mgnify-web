@@ -9,6 +9,7 @@
 ## Other public MGnify Web repositories
 These repositories are also part of the MGnify web stack, but  aren't included as submodules (yet)
 - [mgnify-sourmash-component](https://github.com/EBI-Metagenomics/mgnify-sourmash-component) - web component to create Sourmash sketches in the browser. Published on NPM.
+  - See [npm link](https://docs.npmjs.com/cli/v8/commands/npm-link) for the nice way to work on this locally too.
 - [genome-search](https://github.com/EBI-Metagenomics/genome-search) - microservice API to perform COBS k-mer gene searches on genomes
 - [blog](https://github.com/EBI-Metagenomics/blog) - GitHub-pages hosted blog and feed for the MGnify frontpage
 - [EMG-docs](https://github.com/EBI-Metagenomics/EMG-docs) - source for the Sphinx-powered documentation site (ReadTheDocs)
@@ -18,7 +19,7 @@ These repositories are also part of the MGnify web stack, but  aren't included a
 
 Make, [Task](https://taskfile.dev/), Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
 
-### Setup
+## Setup
 
 Clone the repo and the submodules
 
@@ -79,17 +80,16 @@ Then you can log into the [Django admin console](http://0.0.0.0:8000/admin)
 
 To run MGnify you will need the API and the WebClient running at the same time.
 
-The API will run using docker-compose (to run mysql, mongo and django). 
+The API will run using docker-compose (to run the databases and django etc). 
 
-### API (using MySQL)
-
-```bash
-make api
-```
-
-### API (using Sqlite)
+### API (using Sqlite, **recommended**)
 ```bash
 task run-api
+```
+
+### API (using MySQL)
+```bash
+make api
 ```
 
 The api will be available in `http://localhost:8000/metagenomics/api`
@@ -98,18 +98,26 @@ The api will be available in `http://localhost:8000/metagenomics/api`
 
 Install npm modules
 ```bash
-#make npm run build
+make npm run build
 ```
 
 run the webpack dev server
-
 ```bash
 task run-client
 ```
 
 The webclient will be available in `http://localhost:9000/metagenomics`
 
-## API
+### Sourmash search
+To work on the Sourmash (MAG) search, build a minimal index in the `sourmash-queue` service:
+```shell
+task  create-sourmash-test-index
+```
+Flower (a dashboard for the Celery queue system) is running, browse to [5555](http://127.0.0.1:5555) to see it.
+To debug the worker: `docker attach mgnify-web-sourmash-queue-1`.
+
+
+## Managing the API
 
 To run any django manage command for the API:
 ```shell
@@ -142,11 +150,3 @@ task test-api
 #or for specific test/s with file/class/method name matching some string:
 task test-api -- -k "PublicationAPI"
 ```
-
-### Sourmash search
-To work on the Sourmash (MAG) search, build a minimal index in the `sourmash-queue` service:
-```shell
-task  create-sourmash-test-index
-```
-Flower (a dashboard for the Celery queue system) is running, browse to [5555](http://127.0.0.1:5555) to see it.
-To debug the worker: `docker attach mgnify-web-sourmash-queue-1`.
