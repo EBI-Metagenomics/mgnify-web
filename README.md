@@ -27,13 +27,11 @@ git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git
 ```
 
 There are **two** Docker-Compose setups available (for local development – these are NOT used in production).
-The docker-compose.yml creates an environment with MySQL (not recommended for most use cases).
-The lighter weight docker-compose-lite.yml create an environment backed by Sqlite.
-We are migrating towards the latter option.
+The docker-compose.yml creates an environment with SQlite for the EMG database.
+The other old-docker-compose-lite.yml create an environment backed by MySQL. You won't normally need this, unless you need to test MySQL-specific things.
 
-There is a `Makefile`, targeting the MySQL docker containers.
+The `Makefile`, targeting the MySQL setup, is being deprecated.
 There is a `Taskfile.yml` targeting the Sqlite setup.
-Again, the latter is recommended unless you really need to work on MySQL-specific things.
 
 Note that MySQL is used on GitHub actions for CI, since it better matches the production setup of this API at EBI.
 
@@ -69,7 +67,7 @@ make manage migrate
 ##### Django admin superuser
 
 You can add a Django superuser to the database, so you can use the Django Admin console.
-In the minimal Sqlite dbs, once has been created (username/password: `emgtest`, `emgemgtesttest`).
+In the minimal Sqlite dbs, one has been created (username/password: `emgtest`, `emgemgtesttest`).
 
 ```bash
 make api-superuser
@@ -144,3 +142,11 @@ task test-api
 #or for specific test/s with file/class/method name matching some string:
 task test-api -- -k "PublicationAPI"
 ```
+
+### Sourmash search
+To work on the Sourmash (MAG) search, build a minimal index in the `sourmash-queue` service:
+```shell
+task  create-sourmash-test-index
+```
+Flower (a dashboard for the Celery queue system) is running, browse to [5555](http://127.0.0.1:5555) to see it.
+To debug the worker: `docker attach mgnify-web-sourmash-queue-1`.
