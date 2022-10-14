@@ -6,4 +6,4 @@
 	url = git@github.com:EBI-Metagenomics/ebi-metagenomics-client.git
 [submodule "sourmash-queue"]
 	path = sourmash-queue
-	url = https://github.com/EBI-Metagenomics/sourmash-queue
+	url = git@github.com:EBI-Metagenomics/sourmash-queue.git
