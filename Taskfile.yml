@@ -61,9 +61,9 @@ tasks:
   create-sourmash-test-index:
     cmds:
       - task: docker-compose-up
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/app/ {{.SOURMASH_QUEUE_DOCKER_NAME}} sourmash sketch dna --from-file test-data/all_fasta.txt --outdir /opt/sourmash/signatures --name-from-first
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures {{.SOURMASH_QUEUE_DOCKER_NAME}} sh -c "sourmash index -k 31 --scaled 1000 --dna genome_index *.sig"
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures {{.SOURMASH_QUEUE_DOCKER_NAME}}  unzip genome_index.sbt.zip
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/app/ {{.SOURMASH_QUEUE_DOCKER_NAME}} sourmash sketch dna --from-file test-data/human-gut-v2-0/all_fasta.txt --outdir /opt/sourmash/signatures/human-gut-v2-0 --name-from-first
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures/human-gut-v2-0 {{.SOURMASH_QUEUE_DOCKER_NAME}} sh -c "sourmash index -k 31 --scaled 1000 --dna genomes_index *.sig"
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures/human-gut-v2-0 {{.SOURMASH_QUEUE_DOCKER_NAME}}  unzip genomes_index.sbt.zip
 
   create-test-dbs:
     cmds:

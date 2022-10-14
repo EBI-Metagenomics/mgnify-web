@@ -38,6 +38,20 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./sourmash-queue/:/opt/app
+      - sourmash-data:/opt/sourmash
+      - type: bind
+        source: ./sourmash-queue/settings-local.py
+        target: /opt/app/settings.py
+    links:
+      - redis
+
+  flower:
+    build:
+      context: ./sourmash-queue/
+      dockerfile: Dockerfile
+    command: celery -A tasks flower --loglevel=INFO
+    volumes:
+      - ./sourmash-queue/:/opt/app
       - ./sourmash-queue/settings-local.py:/opt/app/settings.py
       - sourmash-data:/opt/sourmash
     ports:
