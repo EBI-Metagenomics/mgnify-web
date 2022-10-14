@@ -1,9 +1,10 @@
 version: '3'
 
 env:
-  DOCKER_COMPOSE_FILE: docker-compose-lite.yml
+  DOCKER_COMPOSE_FILE: docker-compose.yml
   API_DOCKER_NAME: api-lite
   MONGO_DOCKER_NAME: mongodb-lite
+  SOURMASH_QUEUE_DOCKER_NAME: sourmash-queue
   EMG_CONTAINER_RESULT_PATH: /opt/emgapi/results
   EMG_CONTAINER_FIXTURES_PATH: /opt/emgapi/fixtures
 
@@ -56,6 +57,13 @@ tasks:
         vars:
             API_DOCKER_NAME: api-tests
       - docker compose exec -w /opt/emgapi api-tests pytest {{.CLI_ARGS}}
+
+  create-sourmash-test-index:
+    cmds:
+      - task: docker-compose-up
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/app/ {{.SOURMASH_QUEUE_DOCKER_NAME}} sourmash sketch dna --from-file test-data/all_fasta.txt --outdir /opt/sourmash/signatures --name-from-first
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures {{.SOURMASH_QUEUE_DOCKER_NAME}} sh -c "sourmash index -k 31 --scaled 1000 --dna genome_index *.sig"
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures {{.SOURMASH_QUEUE_DOCKER_NAME}}  unzip genome_index.sbt.zip
 
   create-test-dbs:
     cmds:
