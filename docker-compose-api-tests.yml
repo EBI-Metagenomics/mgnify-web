@@ -1,0 +1,10 @@
+version: '3'
+services:
+  api-lite:
+    build:
+      context: ./emgapi/
+      dockerfile: docker/tests.Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=0
+      - EMG_CONFIG=config/local-tests.yml
+      - BACKLOG_CONFIG=config/backlog-local.yml

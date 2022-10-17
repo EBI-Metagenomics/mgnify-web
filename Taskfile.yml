@@ -15,7 +15,7 @@ tasks:
 
   docker-compose-up:
     cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} up -d
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} up -d
 
   manage:
     cmds:
@@ -53,10 +53,13 @@ tasks:
 
   test-api:
     cmds:
+#      - task: dc
+#        vars:
+#          CLI_ARGS: "down"
       - task: docker-compose-up
         vars:
-            API_DOCKER_NAME: api-tests
-      - docker compose exec -w /opt/emgapi api-tests pytest {{.CLI_ARGS}}
+          DOCKER_ARGS: "-f docker-compose-api-tests.yml"
+      - docker compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
 
   create-sourmash-test-index:
     cmds:
