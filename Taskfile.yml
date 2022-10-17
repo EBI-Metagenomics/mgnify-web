@@ -53,9 +53,6 @@ tasks:
 
   test-api:
     cmds:
-#      - task: dc
-#        vars:
-#          CLI_ARGS: "down"
       - task: docker-compose-up
         vars:
           DOCKER_ARGS: "-f docker-compose-api-tests.yml"
