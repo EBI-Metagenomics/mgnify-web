@@ -56,6 +56,10 @@ A Sqlite database is available in the `ebi-metagenomics-client/ci/testdbs` direc
 If you ever need to recreate this, use `task create-test-dbs`. 
 This makes a minimally populated, migrated, Sqlite `emg` db, a very minimal fake `ena` Sqlite, and dumps a Mongo archive.
 
+There is a Mongo DB dump to go alongside this option. Restore it with:
+```bash
+task restore-mongo-test-db
+```
 
 ##### Empty DB
 
