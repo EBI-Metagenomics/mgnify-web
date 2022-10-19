@@ -17,7 +17,7 @@ These repositories are also part of the MGnify web stack, but  aren't included a
 
 ## Requirements
 
-Make, [Task](https://taskfile.dev/), Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
+[Task](https://taskfile.dev/), Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
 
 ## Setup
 
@@ -27,28 +27,23 @@ Clone the repo and the submodules
 git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git 
 ```
 
-There are **two** Docker-Compose setups available (for local development – these are NOT used in production).
+Docker-compose is used for local development – it is NOT used in production.
 The docker-compose.yml creates an environment with SQlite for the EMG database.
-The other old-docker-compose-lite.yml create an environment backed by MySQL. You won't normally need this, unless you need to test MySQL-specific things.
+Additional docker-compose files extend this:
+- docker-compose-api-test.yml extends the API service with the test dependencies and env vars.
+- docker-compose-mysql.yml adds a MySQL service and switches the API's config file for one set up for MySQL.
+  - You won't normally need this, unless you need to test MySQL-specific things.
 
-The `Makefile`, targeting the MySQL setup, is being deprecated.
-There is a `Taskfile.yml` targeting the Sqlite setup.
+To use the extra docker-compose files, run docker commands like: `docker compose -f docker-compose.yml docker-compose-mysql.yml ...`.
 
-Note that MySQL is used on GitHub actions for CI, since it better matches the production setup of this API at EBI.
+There is a `Taskfile.yml` with tasks for most common development needs like running the services, tests, and managing test databases.
+There are currently no tasks to help with the mysql setup.
+
+Note that MySQL is used on GitHub actions for CI, to match the production setup of this API at EBI.
 
 #### API DB
 
 You can either use a db dump, a minimal-ish test db, or an empty db.
-
-##### Restore dump
-
-Some manual intervention is required to populate the API database.
-
-You need to get a dump of the MySQL database, for that refer to the documentation in confluence.
-
-```bash
-make mysql-restore /path/emg_schema_dump.sql
-```
 
 ##### Using minimal test db.
 A Sqlite database is available in the `ebi-metagenomics-client/ci/testdbs` directory (because this is used in the webclient CI tests).
@@ -66,8 +61,15 @@ task restore-mongo-test-db
 Run the django migrations to get the DB in shape
 
 ```bash
-make manage migrate
+task manage -- migrate
 ```
+
+##### Restore dump
+
+Some manual intervention is required to populate the API database with a production DB dump.
+You need to get a dump of the MySQL database, for that refer to the documentation in confluence (EBI-only).
+Use the MySQL setup, and pipe the dump files into MySQL – the dump files will `INSERT` commands.
+
 
 ##### Django admin superuser
 
@@ -75,10 +77,9 @@ You can add a Django superuser to the database, so you can use the Django Admin 
 In the minimal Sqlite dbs, one has been created (username/password: `emgtest`, `emgemgtesttest`).
 
 ```bash
-make api-superuser
+task manage -- createsuperuser
 ```
-This picks up your local USER for username, but you set a password interactively (or set the `DJANGO_SUPERUSER_PASSWORD` env var).
-Then you can log into the [Django admin console](http://0.0.0.0:8000/admin)
+Then you can log into the [Django admin console](http://127.0.0.1:8000/admin)
 
 ## Running the project
 
@@ -91,12 +92,14 @@ The API will run using docker-compose (to run the databases and django etc).
 task run-api
 ```
 
-### API (using MySQL)
+If you need to use the MySQL backend instead, you would run:
 ```bash
-make api
+docker compose -f docker-compose.yml -f docker-compose-mysql.yml up -d
+task manage -- collectstatic
+task manage -- runserver 0.0.0.0:8000
 ```
 
-The api will be available in `http://localhost:8000/metagenomics/api`
+Either way the api will be available in `http://localhost:8000/metagenomics/api`
 
 ### WebClient
 
