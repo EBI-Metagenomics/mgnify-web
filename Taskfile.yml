@@ -56,7 +56,9 @@ tasks:
       - task: docker-compose-up
         vars:
           DOCKER_ARGS: "-f docker-compose-api-tests.yml"
-      - docker compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
+      - docker compose {{.DOCKER_ARGS}} exec -w /opt/emgapi {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
+    vars:
+      DOCKER_ARGS: "-f docker-compose-api-tests.yml"
 
   create-sourmash-test-index:
     cmds:
