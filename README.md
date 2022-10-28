@@ -105,10 +105,10 @@ Either way the api will be available in `http://localhost:8000/metagenomics/api`
 
 Install npm modules
 ```bash
-make npm run build
+npm install
 ```
 
-run the webpack dev server
+run the webpack dev server (and API, DBs etc via docker compose):
 ```bash
 task run-client
 ```
@@ -118,7 +118,7 @@ The webclient will be available in `http://localhost:9000/metagenomics`
 ### Sourmash search
 To work on the Sourmash (MAG) search, build a minimal index in the `sourmash-queue` service:
 ```shell
-task  create-sourmash-test-index
+task create-sourmash-test-index
 ```
 Flower (a dashboard for the Celery queue system) is running, browse to [5555](http://127.0.0.1:5555) to see it.
 To debug the worker: `docker attach mgnify-web-sourmash-queue-1`.
