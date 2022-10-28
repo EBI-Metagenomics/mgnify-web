@@ -15,7 +15,7 @@ tasks:
 
   docker-compose-up:
     cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} up -d
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} up -d {{.DOCKER_COMPOSE_UP_FLAGS}}
 
   manage:
     cmds:

@@ -157,3 +157,6 @@ task test-api
 #or for specific test/s with file/class/method name matching some string:
 task test-api -- -k "PublicationAPI"
 ```
+If you have been using the API in non-test mode, the test requirements (pytest) won't be installed yet.
+Run `DOCKER_COMPOSE_UP_FLAGS=--build task test-api` the first time to rebuild containers, 
+using the testing Dockerfile instead. 
