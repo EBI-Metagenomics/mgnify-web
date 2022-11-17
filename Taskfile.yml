@@ -56,7 +56,7 @@ tasks:
       - task: docker-compose-up
         vars:
           DOCKER_ARGS: "-f docker-compose-api-tests.yml"
-      - docker compose {{.DOCKER_ARGS}} exec -w /opt/emgapi {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} exec -w /opt/emgapi {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
     vars:
       DOCKER_ARGS: "-f docker-compose-api-tests.yml"
 
