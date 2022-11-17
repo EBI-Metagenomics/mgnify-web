@@ -108,6 +108,13 @@ Install npm modules
 npm install
 ```
 
+If you want the client to talk to the local API, change `ebi-metagenomics-client/config.private.json` to include
+```json
+{
+  "api": "http://127.0.0.1:8000/v1/"
+}
+```
+
 run the webpack dev server (and API, DBs etc via docker compose):
 ```bash
 task run-client
