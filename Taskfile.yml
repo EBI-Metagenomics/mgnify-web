@@ -149,7 +149,7 @@ tasks:
         vars: { ARGUMENTS: 'import_analysis_statuses {{.EMG_CONTAINER_FIXTURES_PATH}}/analysis_statuses.json' }
       - task: manage
         vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/uhgg/2.0 Human\ Gut 2.0 root:Host-associated:Human:Digestive\ system:Large\ intestine' }
-      - task: manage
+      - task: manage  # Set genome catalogue details usually set in admin panel
         vars: { ARGUMENTS: "shell -c \"from emgapi.models import GenomeCatalogue; GenomeCatalogue.objects.filter(catalogue_id='human-gut-v2-0').update(unclustered_genome_count=99, protein_catalogue_name='UHGP', protein_catalogue_description='Protein coding sequences from genomes in the UHGG2.0', description='An update of [Almeida et al, Nature Biotechnol (2021)](https://www.nature.com/articles/s41587-020-0603-3)')\"" }
       - task: manage
         vars: { ARGUMENTS: 'import_extra_assembly_annotations /opt/emgapi/results sanntis sanntis' }
@@ -159,4 +159,8 @@ tasks:
           DJANGO_SUPERUSER_PASSWORD: emgemgtesttest
       - task: manage
         vars: { ARGUMENTS: 'import_analysis ERZ8153470 root:Host-associated:Human:Digestive\ system ASSEMBLY --rootpath /opt/emgapi/results --pipeline 5.0 --result_status no_tax'}
+      - task: manage  # Make a super study – usually done in admin panel
+        vars:
+          ARGUMENTS:
+            sh: echo "shell -c \"from emgapi.models import SuperStudy, Study, SuperStudyStudy; ss = SuperStudy.objects.create(title='Excellent Adventure', url_slug='excellent', description='The **Excellent Adventure** project travelled through [space and time](https://www.imdb.com/title/tt0096928/) to collect microbiome samples.', logo='$(cat ebi-metagenomics-client/ci/fixtures/super_study_logo.txt)'); SuperStudyStudy.objects.create(study=Study.objects.first(), super_study=ss)\""
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongodump --db emg --gzip --archive > ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
