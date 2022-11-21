@@ -1,0 +1,2 @@
+test_data/ERZ1022742.fasta.gz.fna.FILTER.fna.emerald.full.gff
+test_data/ERZ1023300.fasta.gz.fna.FILTER.fna.emerald.full.gff
