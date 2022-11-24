@@ -153,17 +153,21 @@ task run-client
 
 #(in a new terminal)
 cd ebi-metagenomics-client
-npx cypress run --env API_URL=http://localhost:8000/v1 # or with: -s "cypress/integration/browse.js" to run a single test
+task test-client-run 
+#or to run a single test:
+task test-client-run -- -s "cypress/integration/browse.js" 
 #or for an interactive testing experience:
-npx cypress open --env API_URL=http://localhost:8000/v1/
+task test-client-open
 ```
 
 ### API
 ```bash
+task enable-api-tests
 task test-api
 #or for specific test/s with file/class/method name matching some string:
 task test-api -- -k "PublicationAPI"
+task disable-api-tests
 ```
-If you have been using the API in non-test mode, the test requirements (pytest) won't be installed yet.
-Run `DOCKER_COMPOSE_UP_FLAGS=--build task test-api` the first time to rebuild containers, 
-using the testing Dockerfile instead. 
+Note the use of `task enable-api-tests` and `task disable...`:
+these just rebuild the API container with the right `requirements-*.txt`s and config for either testing, or running.  
+This is usually fast thanks to your Docker cache.
