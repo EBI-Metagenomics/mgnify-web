@@ -2,9 +2,20 @@ version: '3'
 services:
 
   mongodb-lite:
-    image: mongo:3.4
+    image: mongo:4.0.17
     ports:
       - "27017:27017"
+#
+#  postgres:
+#    image: postgres:15.1
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - ./postgres-data:/var/lib/postgresql/data
+#    environment:
+#      - POSTGRES_DB=emg
+#      - POSTGRES_USER=postgres
+#      - POSTGRES_PASSWORD=postgres
 
   redis:
     image: redis:latest
