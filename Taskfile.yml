@@ -176,6 +176,8 @@ tasks:
         vars: { ARGUMENTS: 'import_analysis_statuses {{.EMG_CONTAINER_FIXTURES_PATH}}/analysis_statuses.json' }
       - task: manage
         vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/uhgg/2.0 Human\ Gut 2.0 root:Host-associated:Human:Digestive\ system:Large\ intestine v1.2.1' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/non-model-fish-gut/2.0 Non-Model\ Fish\ Gut 2.0 root:Host-associated:Fish:Digestive\ system v2.0.0' }
       - task: manage  # Set genome catalogue details usually set in admin panel
         vars:
           ARGUMENTS:
