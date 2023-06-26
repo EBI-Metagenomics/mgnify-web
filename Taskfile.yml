@@ -2,11 +2,13 @@ version: '3'
 
 env:
   DOCKER_COMPOSE_FILE: docker-compose.yml
-  API_DOCKER_NAME: api-lite
-  MONGO_DOCKER_NAME: mongodb-lite
+  API_DOCKER_NAME: api
+  MONGO_DOCKER_NAME: mongodb
   SOURMASH_QUEUE_DOCKER_NAME: sourmash-queue
   EMG_CONTAINER_RESULT_PATH: /opt/emgapi/results
   EMG_CONTAINER_FIXTURES_PATH: /opt/emgapi/fixtures
+  EMG_CONFIG_DEFAULT: "config/local-lite.yml"
+  EMG_CONFIG_TESTS: "config/local-tests.yml"
 
 tasks:
   dc:
@@ -15,7 +17,9 @@ tasks:
 
   docker-compose-up:
     cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} up -d {{.DOCKER_COMPOSE_UP_FLAGS}}
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} --profile {{.DOCKER_COMPOSE_PROFILE | default "''"}} {{.DOCKER_ARGS}} up -d {{.DOCKER_COMPOSE_UP_FLAGS}} --remove-orphans --force-recreate
+    env:
+      EMG_CONFIG: "{{.EMG_CONFIG | default \"{{.EMG_CONFIG_DEFAULT}}\"}}"
 
   manage:
     cmds:
@@ -36,6 +40,8 @@ tasks:
   run-api:
     cmds:
       - task: docker-compose-up
+        vars:
+          DOCKER_COMPOSE_PROFILE: "{{.PROFILE}}"
       - task: manage
         vars:
           ARGUMENTS: "collectstatic --noinput"
@@ -44,6 +50,12 @@ tasks:
           ARGUMENTS: "runserver 0.0.0.0:8000 --nostatic"
           DOCKER_ARGS: "-d"
 
+  run-api-with-sourmash:
+    cmds:
+      - task: run-api
+        vars:
+          PROFILE: "sourmash"
+
   run-client:
     deps:
       - run-api
@@ -51,24 +63,15 @@ tasks:
       - source ebi-metagenomics-client/env-config.sh
       - npm --prefix ebi-metagenomics-client run start --watch
 
-  enable-api-tests:
-    cmds:
-      - docker compose down
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} -f docker-compose-api-tests.yml build
-
-  disasble-api-tests:
-    cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} -f docker-compose-api-tests.yml down
-      - docker compose build
-
   test-api:
     cmds:
       - task: docker-compose-up
         vars:
-          DOCKER_ARGS: "-f docker-compose-api-tests.yml"
+          DOCKER_COMPOSE_PROFILE: "tests"
+          EMG_CONFIG: "{{.EMG_CONFIG_TESTS}}"
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} exec -w /opt/emgapi {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
-    vars:
-      DOCKER_ARGS: "-f docker-compose-api-tests.yml"
+    env:
+      EMG_CONFIG: "{{.EMG_CONFIG_TESTS}}"
 
   test-client-run:
     preconditions:

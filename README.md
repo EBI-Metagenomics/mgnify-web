@@ -12,14 +12,31 @@ These repositories are also part of the MGnify web stack, but  aren't included a
   - See [npm link](https://docs.npmjs.com/cli/v8/commands/npm-link) for the nice way to work on this locally too.
 - [genome-search](https://github.com/EBI-Metagenomics/genome-search) - microservice API to perform COBS k-mer gene searches on genomes
 - [blog](https://github.com/EBI-Metagenomics/blog) - GitHub-pages hosted blog and feed for the MGnify frontpage
-- [EMG-docs](https://github.com/EBI-Metagenomics/EMG-docs) - source for the Sphinx-powered documentation site (ReadTheDocs)
-- [notebooks](https://github.com/EBI-Metagenomics/notebooks) - MGnify Notebooks Server (Jupyter Lab)
+- [notebooks](https://github.com/EBI-Metagenomics/notebooks) - MGnify Notebooks Server (Jupyter Lab) and Docs (Quarto markdown).
 
 ## Requirements
 
 [Task](https://taskfile.dev/), Docker, Docker-Compose, nodejs, webpack (`npm install -g webpack`).
 
 ## Setup
+### Quickstart:
+```bash
+git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git 
+```
+Change `ebi-metagenomics-client/config.private.json` to include:
+```json
+{
+  "api": "http://127.0.0.1:8000/v1/"
+}
+```
+then
+```bash
+task restore-mongo-test-db
+task run-client
+```
+and browse to [localhost:9000/metagenomics](http://localhost:9000/metagenomics).
+
+### Full instructions:
 
 Clone the repo and the submodules
 
@@ -28,17 +45,17 @@ git clone --recurse-submodules git@github.com:EBI-Metagenomics/mgnify-web.git
 ```
 
 Docker-compose is used for local development – it is NOT used in production.
-The docker-compose.yml creates an environment with SQlite for the EMG database.
-Additional docker-compose files extend this:
-- docker-compose-api-test.yml extends the API service with the test dependencies and env vars.
-- docker-compose-mysql.yml adds a MySQL service and switches the API's config file for one set up for MySQL.
-  - You won't normally need this, unless you need to test MySQL-specific things.
+The docker-compose.yml by defauly creates an environment with SQlite for the EMG database, and a Mongo DB service.
+Extra [profiles](https://docs.docker.com/compose/profiles/) are included in the docker-compose file, 
+to start additional services when needed.
 
-To use the extra docker-compose files, run docker commands like: `docker compose -f docker-compose.yml docker-compose-mysql.yml ...`.
+* Use the profile `--profile sourmash` to start the services needed to work on the Sourmash Genome Search.
+* Use the profile `--profile mysql` to start a MySQL service needed to work on MySQL-specific things (like fulltextindex which isn't supported in SQLite).
+
+Additional config.yml entries/files will be needed for these.
 
 There is a `Taskfile.yml` with tasks for most common development needs like running the services, tests, and managing test databases.
-There are currently no tasks to help with the mysql setup.
-
+__There are currently no tasks to help with the mysql setup (like running the `mysql` profile and targetting the `mysql` config).__
 Note that MySQL is used on GitHub actions for CI, to match the production setup of this API at EBI.
 
 #### API DB
