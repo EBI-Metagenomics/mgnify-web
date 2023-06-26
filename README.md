@@ -179,12 +179,8 @@ task test-client-open
 
 ### API
 ```bash
-task enable-api-tests
 task test-api
 #or for specific test/s with file/class/method name matching some string:
 task test-api -- -k "PublicationAPI"
-task disable-api-tests
 ```
-Note the use of `task enable-api-tests` and `task disable...`:
-these just rebuild the API container with the right `requirements-*.txt`s and config for either testing, or running.  
-This is usually fast thanks to your Docker cache.
+Note that the `task test-api` uses the `--profile tests` docker-compose profile, and uses a different config file too.
