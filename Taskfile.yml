@@ -49,6 +49,8 @@ tasks:
     cmds:
       - task: docker-compose-up
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongorestore --gzip --archive < ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
+    env:
+      EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
 
   run-api:
     desc: "Starts the API django app and necessary services in docker."
