@@ -47,7 +47,7 @@ services:
       - "8000:8000"
     links:
       - mongodb
-      - redis
+#      - redis  # TODO: these needs to be enabled for sourmash profile...
     depends_on:
       - mongodb
     environment:

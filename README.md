@@ -36,6 +36,9 @@ task run-client
 ```
 and browse to [localhost:9000/metagenomics](http://localhost:9000/metagenomics).
 
+The `Taskfile` covers most common dev commands, like testing and version bumping.
+Run `task --list` to see what can be done.
+
 ### Full instructions:
 
 Clone the repo and the submodules

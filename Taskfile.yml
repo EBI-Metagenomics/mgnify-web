@@ -12,22 +12,32 @@ env:
 
 tasks:
   dc:
+    desc: "Run a docker compose subcommand, e.g. task dc -- down"
     cmds:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.CLI_ARGS}}
 
   docker-compose-up:
+    desc: "Start the docker compose services."
+    summary: |
+      Which services are started depends on the DOCKER_COMPOSE_PROFILE env var.
+      See the docker-compose file for details.
+      You can also override the EMV_CONFIG env var to tell the API container to use a different YAML.
     cmds:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} --profile {{.DOCKER_COMPOSE_PROFILE | default "''"}} {{.DOCKER_ARGS}} up -d {{.DOCKER_COMPOSE_UP_FLAGS}} --remove-orphans --force-recreate
     env:
       EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
+    vars:
+      DOCKER_COMPOSE_PROFILE:
 
   manage:
+    desc: "Run Django manage.py subcommand, e.g. task manage -- makemigrations"
     cmds:
       - docker compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} python3 emgcli/manage.py {{.ARGUMENTS}} {{.CLI_ARGS}}
     env:
       EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
 
   migrate:
+    desc: "Run Django migrate in the API container."
     cmds:
       - task: docker-compose-up
       - task: manage
@@ -35,11 +45,13 @@ tasks:
           ARGUMENTS: "migrate -v 3"
 
   restore-mongo-test-db:
+    desc: "Writes the contents of the emg-testdb.mongoarchive fixtures into the containerized Mongo DB."
     cmds:
       - task: docker-compose-up
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongorestore --gzip --archive < ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
 
   run-api:
+    desc: "Starts the API django app and necessary services in docker."
     cmds:
       - task: docker-compose-up
         vars:
@@ -53,12 +65,14 @@ tasks:
           DOCKER_ARGS: "-d"
 
   run-api-with-sourmash:
+    desc: "Starts the API django app, necessary services, as well as the Sourmash microservice and its dependencies."
     cmds:
       - task: run-api
         vars:
           PROFILE: "sourmash"
 
   run-client:
+    desc: "Runs the web client (in watch mode) as well as the API and neccesary services."
     deps:
       - run-api
     cmds:
@@ -66,6 +80,8 @@ tasks:
       - npm --prefix ebi-metagenomics-client run start --watch
 
   test-api:
+    desc: "Runs the API test suite using Pytest."
+    summary: "Add arguments like `task test-api -- -k \"test_import\"` to select only some tests by dir/file/class/method."
     cmds:
       - task: docker-compose-up
         vars:
@@ -76,6 +92,7 @@ tasks:
       EMG_CONFIG: "{{.EMG_CONFIG_TESTS}}"
 
   test-client-run:
+    desc: "Runs the web client test suite using cypress."
     preconditions:
       - sh: test -n "$(lsof -i :9000)"
         msg: 'You need to run the client first. Use `task run-client`'
@@ -84,6 +101,7 @@ tasks:
       - npx cypress run --env API_URL=http://localhost:8000/v1 {{.CLI_ARGS}}
 
   test-client-open:
+    desc: "Opens the web client test suite using cypress, for interactive testing."
     preconditions:
       - sh: test -n "$(lsof -i :9000)"
         msg: 'You need to run the client first. Use `task run-client`'
@@ -92,6 +110,7 @@ tasks:
       - npx cypress open --env API_URL=http://localhost:8000/v1 --e2e
 
   create-sourmash-test-index:
+    desc: "Creates a minimal sourmash index for use in development."
     cmds:
       - task: docker-compose-up
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/app/ {{.SOURMASH_QUEUE_DOCKER_NAME}} sourmash sketch dna --from-file test-data/human-gut-v2-0/all_fasta.txt --outdir /opt/sourmash/signatures/human-gut-v2-0 --name-from-first
@@ -99,6 +118,7 @@ tasks:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures/human-gut-v2-0 {{.SOURMASH_QUEUE_DOCKER_NAME}}  unzip genomes_index.sbt.zip
 
   create-test-dbs:
+    desc: "Creates minimal dev databases as sqlite/mongoarchive files."
     cmds:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} down
       - rm ebi-metagenomics-client/ci/testdbs/emg-testdb.sqlite || echo
@@ -108,65 +128,6 @@ tasks:
       - task: migrate
       - task: manage
         vars: { ARGUMENTS: 'create_ena_test_db' }
-
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_taxonomy ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_qc ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .ipr --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_taxonomy ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 2.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_qc ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 2.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .ipr --pipeline 2.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 2.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR1022502 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 2.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_taxonomy ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_qc ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" .ipr --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERR867655 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_taxonomy ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_qc ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERP104236 "{{.EMG_RESULT_PATH}}" .ipr --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERP104236 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 4.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_taxonomy ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_qc ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_contigs ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_RESULT_PATH}}" .ipr --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .go --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .go_slim --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .pfam --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .gprops --pipeline 5.0' }
-#      - task: manage
-#        vars: { ARGUMENTS: 'import_summary ERZ477576 "{{.EMG_CONTAINER_RESULT_PATH}}" .antismash --pipeline 5.0' }
       - task: manage
         vars: { ARGUMENTS: 'import_kegg_modules {{.EMG_CONTAINER_FIXTURES_PATH}}/kegg_module_orthology.json' }
       - task: manage
@@ -204,6 +165,16 @@ tasks:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongodump --db emg --gzip --archive > ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
 
   bump-client-version:
+    desc: "Increments the version of web client. E.g. task bump-client-version -- patch"
+    summary: "The version part can be patch, minor, major"
     cmds:
-      - npm version {{.CLI_ARGS | default "patch"}} --force
+      - npm version {{.CLI_ARGS | default "patch"}} --force --no-git-tag-version
     dir: ebi-metagenomics-client
+
+  bump-api-version:
+    desc: "Increments the version of API. E.g. task bump-api-version -- patch"
+    summary: "The version part can be patch, minor, major"
+    deps:
+      - run-api
+    cmds:
+      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -w /opt/emgapi -T {{.API_DOCKER_NAME}}  bumpversion bump -- {{.CLI_ARGS | default "patch"}}
