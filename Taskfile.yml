@@ -19,11 +19,13 @@ tasks:
     cmds:
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} --profile {{.DOCKER_COMPOSE_PROFILE | default "''"}} {{.DOCKER_ARGS}} up -d {{.DOCKER_COMPOSE_UP_FLAGS}} --remove-orphans --force-recreate
     env:
-      EMG_CONFIG: "{{.EMG_CONFIG | default \"{{.EMG_CONFIG_DEFAULT}}\"}}"
+      EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
 
   manage:
     cmds:
       - docker compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} python3 emgcli/manage.py {{.ARGUMENTS}} {{.CLI_ARGS}}
+    env:
+      EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
 
   migrate:
     cmds:
@@ -200,3 +202,8 @@ tasks:
           ARGUMENTS:
             sh: echo "shell -c \"$(cat scripts/create_test_db_helpers/create_test_super_study.py)\""
       - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongodump --db emg --gzip --archive > ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
+
+  bump-client-version:
+    cmds:
+      - npm version {{.CLI_ARGS | default "patch"}} --force
+    dir: ebi-metagenomics-client
