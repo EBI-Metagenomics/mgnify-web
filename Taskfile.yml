@@ -73,9 +73,18 @@ tasks:
         vars:
           PROFILE: "sourmash"
 
+  install-client-deps:
+    desc: "Runs npm install for the web client's dependencies."
+    cmds:
+      - npm install
+    dir: ebi-metagenomics-client
+    sources:
+      - ebi-metagenomics-client/package.json
+
   run-client:
     desc: "Runs the web client (in watch mode) as well as the API and neccesary services."
     deps:
+      - install-client-deps
       - run-api
     cmds:
       - source ebi-metagenomics-client/env-config.sh
