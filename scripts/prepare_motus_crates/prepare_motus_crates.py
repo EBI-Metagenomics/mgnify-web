@@ -17,6 +17,60 @@ class MotusCratePreparer:
         self.multiqc_path = None
         self.krona_files = None
         self.output_folder_name = None
+        self.home_button_navigation_script = """
+         <script>
+          function goHome(event) {
+            if (window.self === window.top) {
+              // We're not in an iframe, so we allow the links to work normally
+              return;
+            }
+            event.preventDefault();
+            window.parent.postMessage('ro-crate-preview.html', "*");
+            window.location.href = '../ro-crate-preview.html';
+          }
+
+          document.addEventListener("DOMContentLoaded", function() {
+            const homeButton = document.createElement("a");
+            homeButton.textContent = "Home";
+            homeButton.href = "ro-crate-preview.html";
+            homeButton.classList.add('home-button');
+            homeButton.addEventListener("click", goHome);
+            document.body.insertBefore(homeButton, document.body.firstChild);
+
+            window.addEventListener("scroll", function() {
+              const homeButton = document.querySelector(".home-button");
+
+              if (window.scrollY > 0) {
+                homeButton.classList.add("transparent");
+              } else {
+                homeButton.classList.remove("transparent");
+              }
+            });
+          });
+        </script>
+        """
+        self.home_button_styling = """
+            <style>
+                .home-button {
+                    display: inline-block;
+                    padding: 10px 20px;
+                    position: fixed;
+                    margin-top: 10;
+                    z-index: 3;
+                    left: 50%;
+                    background-color: #007bff;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 5px;
+                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2)
+                }
+                .home-button.transparent {
+                    background-color: transparent;
+                    color: #007bff;
+                    border: 2px solid #007bff;
+                }
+            </style>
+             """
 
     def prepare_motus_crate(self):
         logging.info("Starting the script.")
@@ -30,9 +84,10 @@ class MotusCratePreparer:
             self.find_multiqc_report()
             self.find_krona_files()
             self.create_new_folder()
-            self.copy_files_to_new_folder()
+            self.update_and_copy_multiqc_report()
+            self.update_and_copy_krona_files()
             self.create_preview_html()
-            self.create_ro_crate_metadata()  # Add the creation of ro-crate-metadata.json
+            self.create_ro_crate_metadata()
             self.zip_new_folder()
             self.clean_up()
         except Exception as e:
@@ -93,6 +148,35 @@ class MotusCratePreparer:
             krona_dest_path = os.path.join(self.output_folder_name, f'krona_{subfolder_name}.html')
             shutil.copy2(krona_file, krona_dest_path)
 
+    def update_and_copy_multiqc_report(self):
+        multiqc_report_path = self.multiqc_path[0]
+
+        # Read the content of the original multiqc report
+        with open(multiqc_report_path, 'r') as f:
+            multiqc_content = f.read()
+
+        # Update the multiqc_content to include the home button script
+        updated_multiqc_content = f"{self.home_button_navigation_script}\n{self.home_button_styling}\n{multiqc_content}"
+
+        # Write the updated content to the new multiqc_report.html
+        new_multiqc_report_path = os.path.join(self.output_folder_name, 'multiqc_report.html')
+        with open(new_multiqc_report_path, 'w') as f:
+            f.write(updated_multiqc_content)
+
+    def update_and_copy_krona_files(self):
+        for krona_file in self.krona_files:
+            subfolder_name = os.path.basename(os.path.dirname(krona_file))
+            krona_dest_path = os.path.join(self.output_folder_name, f'krona_{subfolder_name}.html')
+
+            # Read the content of the original krona file
+            with open(krona_file, 'r') as f:
+                krona_content = f.read()
+
+            updated_krona_content = f"{self.home_button_navigation_script}\n{self.home_button_styling}\n{krona_content}"
+
+            with open(krona_dest_path, 'w') as f:
+                f.write(updated_krona_content)
+
     def create_preview_html(self):
         srr_folder_path = os.path.join(self.temp_dir, self.srr_value)  # Use the specific SRR folder
 
@@ -102,7 +186,7 @@ class MotusCratePreparer:
           function containsText(anchor, text) {
             return anchor.textContent.includes(text);
           }
-        
+
           function handleClick(event) {
             if (window.self === window.top) {
               // We're not in an iframe, so we allow the links to work normally
@@ -113,7 +197,7 @@ class MotusCratePreparer:
             const anchorText = anchor.textContent;
             window.parent.postMessage(anchor.id, "*");
           }
-        
+
           document.addEventListener("DOMContentLoaded", function() {
             const anchorTags = document.querySelectorAll("a");
             anchorTags.forEach(anchor => {
@@ -127,8 +211,8 @@ class MotusCratePreparer:
         """
 
         # Update the preview_content to include the unique IDs and the JavaScript script
-        preview_content = f""" <!DOCTYPE html> <html> <head> <title>Preview</title> </head> <body> <h1>Preview of 
-        Extracted HTML Files</h1> <ul> <li><a href="multiqc_report.html" 
+        preview_content = f""" <!DOCTYPE html> <html> <head> <title>Preview</title> </head> <body>
+        <h1>Preview of Extracted HTML Files</h1> <ul> <li><a href="multiqc_report.html" 
         id="multiqc_report.html">multiqc_report.html</a></li> 
         {"".join(f'<li><a href="krona_{subfolder_name}.html" id="krona_{subfolder_name}'
                  f'.html">krona_{subfolder_name}.html</a></li>'
