@@ -1,0 +1,58 @@
+html {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  color: #333;
+  font-size: 14px;
+  background: #eee;
+  margin: 0;
+  padding: 0;
+}
+
+.main {
+  max-width: 900px;
+  margin: auto;
+  background: #fff;
+  padding: 4em;
+}
+
+.data-entity,
+.context-entity {
+  margin: 0.5em 0;
+  background: #fafafa;
+  border-left: 3px solid #18974c;
+  padding: 0.5em;
+  border-radius: 4px;
+}
+
+.context-entity {
+  border-left: 3px solid #734595;
+}
+
+dt {
+  font-weight: bold;
+}
+
+dd {
+  margin-bottom: 10px;
+}
+
+h1 {
+  font-size: 40px;
+}
+
+.wf_image {
+  padding: 10px 0 10px 0;
+  width: 100%;
+}
+
+.RO_crate_logo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 150px;
+  padding: 20px;
+}

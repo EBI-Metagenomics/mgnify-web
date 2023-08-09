@@ -1,0 +1,19 @@
+.home-button {
+  display: inline-block;
+  padding: 10px 20px;
+  position: fixed;
+  margin-top: 10;
+  z-index: 3;
+  left: 50%;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.home-button.transparent {
+  background-color: transparent;
+  color: #007bff;
+  border: 2px solid #007bff;
+}
