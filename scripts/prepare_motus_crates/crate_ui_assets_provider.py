@@ -17,7 +17,7 @@ class CrateUIAssetsProvider:
             return f"<{asset_tag}>{content}</{asset_tag}>" if asset_tag else content
 
     @staticmethod
-    def generate_contents_list(srr_folder_path):
+    def generate_krona_files_list(srr_folder_path):
         subfolder_links = [
             (f'<li><a href="krona_{subfolder_name}.html" id="krona_{subfolder_name}.html">'
              f'krona_{subfolder_name}.html</a></li>')
@@ -28,7 +28,7 @@ class CrateUIAssetsProvider:
 
     def generate_preview_html(self, crate_srr_value, temp_zip_dir, metadata_html):
         srr_folder_path = os.path.join(temp_zip_dir, crate_srr_value)
-        contents_list = self.generate_contents_list(srr_folder_path)
+        krona_files_list = self.generate_krona_files_list(srr_folder_path)
         published_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         html = (
@@ -56,7 +56,7 @@ class CrateUIAssetsProvider:
             f"            <ul>\n"
             f"                <li><a href=\"multiqc_report.html\" id=\"multiqc_report.html\">"
             f"multiqc_report.html</a></li>\n"
-            f"                {contents_list}\n"
+            f"                {krona_files_list}\n"
             f"            </ul>\n"
             f"        </div>\n"
             f"    </div>\n"
