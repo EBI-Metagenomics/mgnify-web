@@ -2,7 +2,7 @@ import os
 import datetime
 
 
-class CrateUIAssetsProvider:
+class RoCrateUIAssetsProvider:
     def __init__(self):
         self.preview_html_styling = self.load_asset('assets/css/ro-crate-preview.css', 'style')
         self.ro_crate_preview_script = self.load_asset('assets/js/ro-crate-preview.js', 'script')
@@ -17,7 +17,7 @@ class CrateUIAssetsProvider:
             return f"<{asset_tag}>{content}</{asset_tag}>" if asset_tag else content
 
     @staticmethod
-    def generate_krona_files_list(srr_folder_path):
+    def generate_krona_files_list_elements(srr_folder_path):
         subfolder_links = [
             (f'<li><a href="krona_{subfolder_name}.html" id="krona_{subfolder_name}.html">'
              f'krona_{subfolder_name}.html</a></li>')
@@ -28,7 +28,7 @@ class CrateUIAssetsProvider:
 
     def generate_preview_html(self, crate_srr_value, temp_zip_dir, metadata_html):
         srr_folder_path = os.path.join(temp_zip_dir, crate_srr_value)
-        krona_files_list = self.generate_krona_files_list(srr_folder_path)
+        krona_files_list = self.generate_krona_files_list_elements(srr_folder_path)
         published_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         html = (
