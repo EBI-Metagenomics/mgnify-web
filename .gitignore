@@ -3,3 +3,4 @@
 *.xml
 .idea/
 *.DS_Store
+.task
