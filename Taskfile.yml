@@ -168,7 +168,9 @@ tasks:
       - task: manage
         vars: { ARGUMENTS: 'import_extra_assembly_annotations /opt/emgapi/results sanntis sanntis' }
       - task: manage
-        vars: { ARGUMENTS: 'import_extra_assembly_annotations /opt/emgapi/results crates rocrate' }
+        vars: { ARGUMENTS: 'import_extra_assembly_annotations /opt/emgapi/results crates/sanntis rocrate' }
+      - task: manage
+        vars: { ARGUMENTS: 'import_extra_run_annotations /opt/emgapi/results crates/motus rocrate' }
       - task: manage  # Make a super study – usually done in admin panel
         vars:
           ARGUMENTS:
