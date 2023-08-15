@@ -11,7 +11,7 @@ from ro_crate_ui_assets_provider import RoCrateUIAssetsProvider
 from tqdm import tqdm
 
 
-class MotusCratePreparer:
+class MotusRoCratesPreparer:
     def __init__(self, original_ro_crate_zip_url, destination_folder_path):
         self.original_ro_crate_zip_url = original_ro_crate_zip_url
         self.destination_folder_path = destination_folder_path
@@ -227,7 +227,7 @@ if __name__ == "__main__":
     parser.add_argument('destination_folder', type=str, help='Destination folder path.')
     args = parser.parse_args()
 
-    preparer = MotusCratePreparer(args.original_crate_zip_url, args.destination_folder)
+    preparer = MotusRoCratesPreparer(args.original_crate_zip_url, args.destination_folder)
     logging.basicConfig(
         level=logging.INFO,
         format='[%(asctime)s] [%(levelname)s] %(message)s',
