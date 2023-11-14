@@ -32,6 +32,10 @@ When you download a shapefile from Marine Regions, you will get a zip file conta
 
 Note that the version number i.e _v12 may vary.
 
+## Testing
+There is a test_data folder that contains the abs_info.csv and test_output.json files for testing purposes.
+The eez_v12 folder has been gitignored due to it's size. To download eez shapefile data, you can use this link: https://www.marineregions.org/downloads.php#eezshape
+
 To run the script, type in the command:
 ```python3 prepare_eez_data.py <shapefile_path> <output_path>```
 The dependencies are defined in the requirements.txt file.
