@@ -28,11 +28,11 @@ class EezAbsMapper:
         self.eez_shapefile_data = gpd.read_file(self.shapefile_path)
 
     def load_abs_data_from_csv(self):
-        logger.info(f"Loading ABS data from CSV file '{self.abs_csv_file}'...")
+        logger.info(f"Loading ABS data from '{self.abs_csv_file}'...")
         try:
             self.abs_csv_data = pd.read_csv(self.abs_csv_file)
         except FileNotFoundError:
-            logger.error(f"CSV file '{self.abs_csv_file}' not found.")
+            logger.error(f"{self.abs_csv_file = } not found.")
             self.abs_csv_data = None
 
     def get_eez_sovereigns_abs_status(self, row):
