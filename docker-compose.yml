@@ -6,6 +6,8 @@ services:
     image: mongo:4.0.17
     ports:
       - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
 
   mysql:
     # Relational databased used by EMG API, managed by Django.
@@ -89,3 +91,4 @@ volumes:
   redis-data:
   sourmash-data:
   mysql-data:
+  mongo-data:
