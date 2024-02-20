@@ -37,7 +37,6 @@ class MotusRoCratesPreparer:
         try:
             self.setup_logging()
             self.extract_files_from_subdirectories(self.original_ro_crate_path)
-            print(len(self.list_of_links_to_return))
             for source in self.list_of_links_to_return:
                 self.original_ro_crate_zip_url = source
                 self.create_ro_crate_temp_dir()
