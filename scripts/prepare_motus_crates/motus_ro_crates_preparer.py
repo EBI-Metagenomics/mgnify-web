@@ -235,8 +235,6 @@ class MotusRoCratesPreparer:
         links = soup.find_all('a')
 
         links = links[5:]
-        # links = links[:-2]
-        # Iterate through the links
         for link in links:
             href = link.get('href')
             if href.endswith('.md5'):
@@ -247,7 +245,6 @@ class MotusRoCratesPreparer:
                 href = urljoin(url, href)
                 if not href.endswith('.tar.gz'):
                     continue
-                # push the link to the list
                 self.list_of_links_to_return.append(href)
                 continue
             subdir_url = urljoin(url, href)
@@ -264,7 +261,3 @@ if __name__ == "__main__":
 
     preparer = MotusRoCratesPreparer(args.original_crate_zip_url, args.destination_folder, args.extract_multiple)
     preparer.prepare_motus_ro_crate()
-    # if args.extract_multiple:
-    #     preparer.prepare_motus_ro_crate()
-    # else:
-    #     logging.info("Not extracting multiple.")
