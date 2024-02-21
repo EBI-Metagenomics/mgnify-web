@@ -4,16 +4,22 @@ import glob
 import json
 import logging
 import os
+from urllib.parse import urljoin
+
 import requests
 import shutil
 import tarfile
 from ro_crate_ui_assets_provider import RoCrateUIAssetsProvider
 from tqdm import tqdm
+from bs4 import BeautifulSoup
 
 
 class MotusRoCratesPreparer:
-    def __init__(self, original_ro_crate_zip_url, destination_folder_path):
-        self.original_ro_crate_zip_url = original_ro_crate_zip_url
+    def __init__(self, original_ro_crate_path, destination_folder_path, extract_multiple=False):
+        self.extract_multiple = extract_multiple
+        self.original_ro_crate_zip_url = None if extract_multiple else original_ro_crate_path
+        self.list_of_links_to_return = []
+        self.original_ro_crate_path = original_ro_crate_path
         self.destination_folder_path = destination_folder_path
         self.srr_value = None
         self.downloaded_ro_crate_zip_temp_dir = None
@@ -30,21 +36,24 @@ class MotusRoCratesPreparer:
 
         try:
             self.setup_logging()
-            self.create_ro_crate_temp_dir()
-            self.get_srr_value()
-            self.download_ro_crate_zip_file()
-            self.extract_downloaded_ro_crate_zip_file()
-            self.find_multiqc_report()
-            self.find_krona_files()
-            self.create_ro_crate_output_folder()
-            self.copy_files_to_ro_crate_output_folder()
-            self.add_home_button_navigation_to_multiqc_report()
-            self.add_home_button_navigation_to_krona_files()
-            self.create_ro_crate_metadata()
-            self.create_html_from_ro_crate_metadata()
-            self.create_ro_crate_preview_html()
-            self.zip_ro_crate_output_folder()
-            self.clean_up()
+            self.extract_files_from_subdirectories(self.original_ro_crate_path)
+            for source in self.list_of_links_to_return:
+                self.original_ro_crate_zip_url = source
+                self.create_ro_crate_temp_dir()
+                self.get_srr_value()
+                self.download_ro_crate_zip_file()
+                self.extract_downloaded_ro_crate_zip_file()
+                self.find_multiqc_report()
+                self.find_krona_files()
+                self.create_ro_crate_output_folder()
+                self.copy_files_to_ro_crate_output_folder()
+                self.add_home_button_navigation_to_multiqc_report()
+                self.add_home_button_navigation_to_krona_files()
+                self.create_ro_crate_metadata()
+                self.create_html_from_ro_crate_metadata()
+                self.create_ro_crate_preview_html()
+                self.zip_ro_crate_output_folder()
+                self.clean_up()
         except Exception as e:
             logging.error(str(e))
             raise
@@ -180,13 +189,10 @@ class MotusRoCratesPreparer:
         metadata["@graph"].append(ro_crate_root_directory)
 
         with tqdm(total=len(os.listdir(self.downloaded_ro_crate_zip_temp_dir)), desc="Creating metadata") as pbar:
-            # with tqdm(total=len(os.listdir('/Users/mahfouz/Downloads/SRR5787994')), desc="Creating metadata") as pbar:
             for root, _, files in os.walk(self.downloaded_ro_crate_zip_temp_dir):
-                # for root, _, files in os.walk('/Users/mahfouz/Downloads/SRR5787994'):
                 files = [filename for filename in files if not filename.endswith('.DS_Store')]
                 directory_metadata = {
                     "@id": os.path.relpath(root, self.downloaded_ro_crate_zip_temp_dir) + '/',
-                    # "@id": os.path.relpath(root, '/Users/mahfouz/Downloads/SRR5787994') + '/',
                     "@type": "Dataset",
                     "name": os.path.basename(root),
                     "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
@@ -220,17 +226,45 @@ class MotusRoCratesPreparer:
     def clean_up(self):
         shutil.rmtree(self.downloaded_ro_crate_zip_temp_dir)
 
+    def extract_files_from_subdirectories(self, url):
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(f"Failed to fetch {url}")
+            return
+        soup = BeautifulSoup(response.text, 'html.parser')
+        links = soup.find_all('a')
+
+        links = links[5:]
+        # links = links[:-2]
+        # Iterate through the links
+        for link in links:
+            href = link.get('href')
+            if href.endswith('.md5'):
+                continue
+            # Ignore parent directory link and non-directory links
+            if href == '../' or not href.endswith('/'):
+                # get full link
+                href = urljoin(url, href)
+                if not href.endswith('.tar.gz'):
+                    continue
+                # push the link to the list
+                self.list_of_links_to_return.append(href)
+                continue
+            subdir_url = urljoin(url, href)
+            self.extract_files_from_subdirectories(subdir_url)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Prepare Motus crate.')
     parser.add_argument('original_crate_zip_url', type=str, help='URL to the original crate zip file.')
     parser.add_argument('destination_folder', type=str, help='Destination folder path.')
+    parser.add_argument('--extract_multiple', action='store_true', help='Prepare multiple RO crates from a list of '
+                                                                        'directories.')
     args = parser.parse_args()
 
-    preparer = MotusRoCratesPreparer(args.original_crate_zip_url, args.destination_folder)
-    logging.basicConfig(
-        level=logging.INFO,
-        format='[%(asctime)s] [%(levelname)s] %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S',
-    )
+    preparer = MotusRoCratesPreparer(args.original_crate_zip_url, args.destination_folder, args.extract_multiple)
     preparer.prepare_motus_ro_crate()
+    # if args.extract_multiple:
+    #     preparer.prepare_motus_ro_crate()
+    # else:
+    #     logging.info("Not extracting multiple.")
