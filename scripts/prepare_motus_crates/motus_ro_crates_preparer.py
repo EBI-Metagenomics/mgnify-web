@@ -5,6 +5,7 @@ import json
 import logging
 import os
 from urllib.parse import urljoin
+from uuid import uuid4
 
 import requests
 import shutil
@@ -12,6 +13,7 @@ import tarfile
 from ro_crate_ui_assets_provider import RoCrateUIAssetsProvider
 from tqdm import tqdm
 from bs4 import BeautifulSoup
+from arcp import *
 
 
 class MotusRoCratesPreparer:
@@ -32,6 +34,7 @@ class MotusRoCratesPreparer:
         self.ro_crate_asset_provider = RoCrateUIAssetsProvider()
 
     def prepare_motus_ro_crate(self):
+        # self.setup_logging()
         logging.info("Starting the script.")
 
         try:
@@ -135,14 +138,11 @@ class MotusRoCratesPreparer:
     def add_home_button_navigation_to_multiqc_report(self):
         multiqc_report_path = self.multiqc_path[0]
 
-        # Read the content of the original multiqc report
         with open(multiqc_report_path, 'r') as f:
             multiqc_content = f.read()
 
-        # Update the multiqc_content to include the home button script
         updated_multiqc_content = f"{self.ro_crate_asset_provider.home_button_navigation_script}\n{self.ro_crate_asset_provider.home_button_styling}\n{multiqc_content}"
 
-        # Write the updated content to the new multiqc_report.html
         new_multiqc_report_path = os.path.join(self.ro_crate_output_folder_name, 'multiqc_report.html')
         with open(new_multiqc_report_path, 'w') as f:
             f.write(updated_multiqc_content)
@@ -152,11 +152,9 @@ class MotusRoCratesPreparer:
             subfolder_name = os.path.basename(os.path.dirname(krona_file))
             krona_dest_path = os.path.join(self.ro_crate_output_folder_name, f'krona_{subfolder_name}.html')
 
-            # Read the content of the original krona file
             with open(krona_file, 'r') as f:
                 krona_content = f.read()
 
-            # Update the krona_content to include the home button script
             updated_krona_content = f"{self.ro_crate_asset_provider.home_button_navigation_script}\n{self.ro_crate_asset_provider.home_button_styling}\n{krona_content}"
 
             with open(krona_dest_path, 'w') as f:
@@ -171,47 +169,116 @@ class MotusRoCratesPreparer:
             f.write(preview_content)
 
     def create_ro_crate_metadata(self):
-        # Generate metadata
         metadata = {
             "@context": "https://w3id.org/ro/crate/1.0/context",
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/wfrun/process/0.1"
+            },
             "@graph": [],
         }
 
         ro_crate_root_directory = {
             "@id": "./",
             "@type": "Dataset",
-            "name": f"mOTUs data for run {self.srr_value}",
-            "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
-            "description": f"mOTUs data for run {self.srr_value}",
-            "creator": {"@type": "Person", "name": "MotusCratePreparer"},
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/wfrun/process/0.1"
+            },
+            "creator": {
+                "@id": "https://ror.org/02catss52"
+            },
+            # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "description": "mOTUs is a containarised pipeline for profiling shotgun metagenomic data.",
             "hasPart": [],
         }
         metadata["@graph"].append(ro_crate_root_directory)
 
+        motus_id_prefix = f"motus_{self.srr_value}/"
+        for krona_file in self.krona_files:
+            if krona_file.endswith('LSU/krona.html'):
+                metadata["@graph"][0]["hasPart"].append({
+                    "@id": f"{motus_id_prefix}krone_LSU.html",
+                    "@type": "Dataset",
+                    "name": "krona_LSU.html",
+                    # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                })
+            if krona_file.endswith('SSU/krona.html'):
+                metadata["@graph"][0]["hasPart"].append({
+                    "@id": f"{motus_id_prefix}krona_SSU.html",
+                    "@type": "Dataset",
+                    "name": "krona_SSU.html",
+                    # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                })
+
+        if self.multiqc_path:
+            metadata["@graph"][0]["hasPart"].append({
+                "@id": f"{motus_id_prefix}multiqc_report.html",
+                "@type": "Dataset",
+                "name": "multiqc_report.html",
+                # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+            })
+
+        metadata["@graph"][0]["hasPart"].append({
+            "@id": f"{motus_id_prefix}ro-crate-metadata.json",
+            "@type": "CreativeWork",
+            "name": "ro-crate-metadata.json",
+            # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+        })
+        metadata["@graph"][0]["hasPart"].append({
+            "@id": f"{motus_id_prefix}ro-crate-preview.html",
+            "@type": "CreativeWork",
+            "name": "ro-crate-preview.html",
+            # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+        })
+
+        metadata["@graph"].append({
+            "@id": '#' + uuid4().hex,
+            "@type": "CrateAction",
+            "agent": [
+                {
+                    "@id": "https://ror.org/02catss52"
+                }
+            ],
+            "description": "mOTUs is a containarised pipeline for profiling shotgun metagenomic data.",
+            "endTime": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "instrument": [
+                {
+                    "@id": "https://github.com/EBI-Metagenomics/motus_pipeline"
+                }
+            ],
+            "name": "mOTUs run on " + self.srr_value,
+            "result": [
+                {
+                    "@id": self.original_ro_crate_path
+                }
+            ],
+        })
+
+        parent_arcp = arcp_location(self.original_ro_crate_path)
+        directory_metadata = {
+            "@id": self.original_ro_crate_path,
+            "@base": parent_arcp,
+            "creator": {
+                "@id": "https://ror.org/02catss52"
+            },
+            "hasPart": [],
+        }
+
         with tqdm(total=len(os.listdir(self.downloaded_ro_crate_zip_temp_dir)), desc="Creating metadata") as pbar:
             for root, _, files in os.walk(self.downloaded_ro_crate_zip_temp_dir):
                 files = [filename for filename in files if not filename.endswith('.DS_Store')]
-                directory_metadata = {
-                    "@id": os.path.relpath(root, self.downloaded_ro_crate_zip_temp_dir) + '/',
-                    "@type": "Dataset",
-                    "name": os.path.basename(root),
-                    "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
-                    "hasPart": [],
-                }
 
                 for filename in files:
+                    file_created_date = datetime.datetime.fromtimestamp(os.path.getctime(os.path.join(root, filename)))
                     file_metadata = {
-                        "@id": os.path.join(directory_metadata["@id"], filename),
-                        "@type": "File",
+                        "@id": parent_arcp + os.path.relpath(os.path.join(root, filename),
+                                                             self.downloaded_ro_crate_zip_temp_dir),
+                        "@type": "Dataset",
                         "name": filename,
-                        "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
                     }
                     directory_metadata["hasPart"].append(file_metadata)
-
-                metadata["@graph"].append(directory_metadata)
                 pbar.update(1)
+            metadata["@graph"].append(directory_metadata)
 
-        # Write the metadata to the ro-crate-metadata.json file
         ro_crate_metadata_path = os.path.join(self.ro_crate_output_folder_name, 'ro-crate-metadata.json')
         self.raw_ro_crate_metadata = metadata
         with open(ro_crate_metadata_path, 'w') as f:
@@ -227,6 +294,9 @@ class MotusRoCratesPreparer:
         shutil.rmtree(self.downloaded_ro_crate_zip_temp_dir)
 
     def extract_files_from_subdirectories(self, url):
+        if not self.extract_multiple:
+            self.list_of_links_to_return.append(url)
+            return
         response = requests.get(url)
         if response.status_code != 200:
             print(f"Failed to fetch {url}")
@@ -239,9 +309,7 @@ class MotusRoCratesPreparer:
             href = link.get('href')
             if href.endswith('.md5'):
                 continue
-            # Ignore parent directory link and non-directory links
             if href == '../' or not href.endswith('/'):
-                # get full link
                 href = urljoin(url, href)
                 if not href.endswith('.tar.gz'):
                     continue
@@ -252,12 +320,12 @@ class MotusRoCratesPreparer:
 
 
 if __name__ == "__main__":
+    logging.info('feedback')
     parser = argparse.ArgumentParser(description='Prepare Motus crate.')
     parser.add_argument('original_crate_zip_url', type=str, help='URL to the original crate zip file.')
     parser.add_argument('destination_folder', type=str, help='Destination folder path.')
     parser.add_argument('--extract_multiple', action='store_true', help='Prepare multiple RO crates from a list of '
                                                                         'directories.')
     args = parser.parse_args()
-
     preparer = MotusRoCratesPreparer(args.original_crate_zip_url, args.destination_folder, args.extract_multiple)
     preparer.prepare_motus_ro_crate()
