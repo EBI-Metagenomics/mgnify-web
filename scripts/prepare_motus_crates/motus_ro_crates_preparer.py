@@ -34,7 +34,6 @@ class MotusRoCratesPreparer:
         self.ro_crate_asset_provider = RoCrateUIAssetsProvider()
 
     def prepare_motus_ro_crate(self):
-        # self.setup_logging()
         logging.info("Starting the script.")
 
         try:
@@ -331,7 +330,6 @@ class MotusRoCratesPreparer:
 
 
 if __name__ == "__main__":
-    logging.info('feedback')
     parser = argparse.ArgumentParser(description='Prepare Motus crate.')
     parser.add_argument('original_crate_zip_url', type=str, help='URL to the original crate zip file.')
     parser.add_argument('destination_folder', type=str, help='Destination folder path.')
