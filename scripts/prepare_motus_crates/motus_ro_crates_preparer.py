@@ -184,50 +184,57 @@ class MotusRoCratesPreparer:
                 "@id": "https://w3id.org/ro/wfrun/process/0.1"
             },
             "creator": {
-                "@id": "https://ror.org/02catss52"
+                "@id": "https://ror.org/02catss52",
+                "@type": "Organisation"
             },
-            # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
             "description": "mOTUs is a containarised pipeline for profiling shotgun metagenomic data.",
-            "hasPart": [],
         }
         metadata["@graph"].append(ro_crate_root_directory)
 
         motus_id_prefix = f"motus_{self.srr_value}/"
         for krona_file in self.krona_files:
             if krona_file.endswith('LSU/krona.html'):
-                metadata["@graph"][0]["hasPart"].append({
-                    "@id": f"{motus_id_prefix}krone_LSU.html",
+                # metadata["@graph"][0]["hasPart"].append({
+                metadata["@graph"].append({
+                    "@id": "krone_LSU.html",
                     "@type": "Dataset",
                     "name": "krona_LSU.html",
-                    # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
                 })
             if krona_file.endswith('SSU/krona.html'):
-                metadata["@graph"][0]["hasPart"].append({
-                    "@id": f"{motus_id_prefix}krona_SSU.html",
+                metadata["@graph"].append({
+                    "@id": "krona_SSU.html",
                     "@type": "Dataset",
                     "name": "krona_SSU.html",
-                    # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
                 })
 
         if self.multiqc_path:
-            metadata["@graph"][0]["hasPart"].append({
-                "@id": f"{motus_id_prefix}multiqc_report.html",
+            metadata["@graph"].append({
+                "@id": "multiqc_report.html",
                 "@type": "Dataset",
                 "name": "multiqc_report.html",
-                # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
             })
 
-        metadata["@graph"][0]["hasPart"].append({
-            "@id": f"{motus_id_prefix}ro-crate-metadata.json",
+        metadata["@graph"].append({
+            "@id": "ro-crate-metadata.json",
             "@type": "CreativeWork",
             "name": "ro-crate-metadata.json",
-            # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "conformsTo": {
+                "@id": "https://w3id.org/ro/crate/1.1"
+            },
+            "about": {
+                "@id": "./"
+            },
+            "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
         })
-        metadata["@graph"][0]["hasPart"].append({
+        metadata["@graph"].append({
             "@id": f"{motus_id_prefix}ro-crate-preview.html",
             "@type": "CreativeWork",
             "name": "ro-crate-preview.html",
-            # "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+            "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
         })
 
         metadata["@graph"].append({
@@ -235,20 +242,23 @@ class MotusRoCratesPreparer:
             "@type": "CrateAction",
             "agent": [
                 {
-                    "@id": "https://ror.org/02catss52"
+                    "@id": "https://ror.org/02catss52",
+                    "@type": "Organisation"
                 }
             ],
             "description": "mOTUs is a containarised pipeline for profiling shotgun metagenomic data.",
             "endTime": datetime.datetime.now().strftime("%Y-%m-%d"),
             "instrument": [
                 {
-                    "@id": "https://github.com/EBI-Metagenomics/motus_pipeline"
+                    "@id": "https://github.com/EBI-Metagenomics/motus_pipeline",
+                    "@type": "SoftwareApplication"
                 }
             ],
             "name": "mOTUs run on " + self.srr_value,
             "result": [
                 {
-                    "@id": self.original_ro_crate_path
+                    "@id": self.original_ro_crate_path,
+                    "@type": "Dataset"
                 }
             ],
         })
@@ -256,9 +266,11 @@ class MotusRoCratesPreparer:
         parent_arcp = arcp_location(self.original_ro_crate_path)
         directory_metadata = {
             "@id": self.original_ro_crate_path,
+            "@type": "Dataset",
             "@base": parent_arcp,
             "creator": {
-                "@id": "https://ror.org/02catss52"
+                "@id": "https://ror.org/02catss52",
+                "@type": "Organisation"
             },
             "hasPart": [],
         }
@@ -268,7 +280,6 @@ class MotusRoCratesPreparer:
                 files = [filename for filename in files if not filename.endswith('.DS_Store')]
 
                 for filename in files:
-                    file_created_date = datetime.datetime.fromtimestamp(os.path.getctime(os.path.join(root, filename)))
                     file_metadata = {
                         "@id": parent_arcp + os.path.relpath(os.path.join(root, filename),
                                                              self.downloaded_ro_crate_zip_temp_dir),
