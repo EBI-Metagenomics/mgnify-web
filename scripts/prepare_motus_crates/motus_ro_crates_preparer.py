@@ -13,7 +13,7 @@ import tarfile
 from ro_crate_ui_assets_provider import RoCrateUIAssetsProvider
 from tqdm import tqdm
 from bs4 import BeautifulSoup
-from arcp import *
+from arcp import arcp_location
 
 
 class MotusRoCratesPreparer:
