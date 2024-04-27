@@ -109,32 +109,36 @@ class MotusRoCratesPreparer:
     def find_multiqc_report(self):
         srr_folder_path = self.get_srr_folder_path()
         self.multiqc_path = glob.glob(os.path.join(srr_folder_path, 'qc', 'multiqc', 'multiqc_report.html'))
-        if not self.multiqc_path:
-            raise FileNotFoundError("multiqc_report.html not found in the extracted folder.")
+        # if not self.multiqc_path:
+        #     raise FileNotFoundError("multiqc_report.html not found in the extracted folder.")
 
     def find_krona_files(self):
         srr_folder_path = self.get_srr_folder_path()
         self.krona_files = [file for file in glob.glob(os.path.join(srr_folder_path, 'taxonomy', '*', 'krona.html'))
                             if not file.endswith('.DS_Store')]
-        if not self.krona_files:
-            raise FileNotFoundError("No krona.html files found in the extracted folder.")
+        # if not self.krona_files:
+        #     raise FileNotFoundError("No krona.html files found in the extracted folder.")
 
     def create_ro_crate_output_folder(self):
         self.ro_crate_output_folder_name = os.path.join(self.destination_folder_path, f"motus_{self.srr_value}")
         os.makedirs(self.ro_crate_output_folder_name, exist_ok=True)
 
     def copy_files_to_ro_crate_output_folder(self):
-        with tqdm(total=len(self.krona_files) + 1, desc="Copying files") as pbar:  # Add tqdm here
-            shutil.copy2(self.multiqc_path[0], os.path.join(self.ro_crate_output_folder_name, 'multiqc_report.html'))
-            pbar.update(1)
-
-            for krona_file in self.krona_files:
-                subfolder_name = os.path.basename(os.path.dirname(krona_file))
-                krona_dest_path = os.path.join(self.ro_crate_output_folder_name, f'krona_{subfolder_name}.html')
-                shutil.copy2(krona_file, krona_dest_path)
+        with tqdm(total=len(self.krona_files) + 1, desc="Copying files") as pbar:
+            if self.multiqc_path:
+                shutil.copy2(self.multiqc_path[0], os.path.join(self.ro_crate_output_folder_name, 'multiqc_report.html'))
                 pbar.update(1)
 
+            if self.krona_files:
+                for krona_file in self.krona_files:
+                    subfolder_name = os.path.basename(os.path.dirname(krona_file))
+                    krona_dest_path = os.path.join(self.ro_crate_output_folder_name, f'krona_{subfolder_name}.html')
+                    shutil.copy2(krona_file, krona_dest_path)
+                    pbar.update(1)
+
     def add_home_button_navigation_to_multiqc_report(self):
+        if not self.multiqc_path:
+            return
         multiqc_report_path = self.multiqc_path[0]
 
         with open(multiqc_report_path, 'r') as f:
@@ -147,6 +151,8 @@ class MotusRoCratesPreparer:
             f.write(updated_multiqc_content)
 
     def add_home_button_navigation_to_krona_files(self):
+        if not self.krona_files:
+            return
         for krona_file in self.krona_files:
             subfolder_name = os.path.basename(os.path.dirname(krona_file))
             krona_dest_path = os.path.join(self.ro_crate_output_folder_name, f'krona_{subfolder_name}.html')
@@ -192,22 +198,23 @@ class MotusRoCratesPreparer:
         metadata["@graph"].append(ro_crate_root_directory)
 
         motus_id_prefix = f"motus_{self.srr_value}/"
-        for krona_file in self.krona_files:
-            if krona_file.endswith('LSU/krona.html'):
-                # metadata["@graph"][0]["hasPart"].append({
-                metadata["@graph"].append({
-                    "@id": "krone_LSU.html",
-                    "@type": "Dataset",
-                    "name": "krona_LSU.html",
-                    "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
-                })
-            if krona_file.endswith('SSU/krona.html'):
-                metadata["@graph"].append({
-                    "@id": "krona_SSU.html",
-                    "@type": "Dataset",
-                    "name": "krona_SSU.html",
-                    "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
-                })
+        if self.krona_files:
+            for krona_file in self.krona_files:
+                if krona_file.endswith('LSU/krona.html'):
+                    # metadata["@graph"][0]["hasPart"].append({
+                    metadata["@graph"].append({
+                        "@id": "krone_LSU.html",
+                        "@type": "Dataset",
+                        "name": "krona_LSU.html",
+                        "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    })
+                if krona_file.endswith('SSU/krona.html'):
+                    metadata["@graph"].append({
+                        "@id": "krona_SSU.html",
+                        "@type": "Dataset",
+                        "name": "krona_SSU.html",
+                        "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
+                    })
 
         if self.multiqc_path:
             metadata["@graph"].append({
