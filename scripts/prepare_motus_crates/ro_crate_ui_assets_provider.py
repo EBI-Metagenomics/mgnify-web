@@ -26,9 +26,13 @@ class RoCrateUIAssetsProvider:
         ]
         return '\n'.join(subfolder_links)
 
-    def generate_preview_html(self, crate_srr_value, temp_zip_dir, metadata_html):
+    def generate_preview_html(self, crate_srr_value, temp_zip_dir, metadata_html, include_krona_files=False,
+                              include_multiqc_report=False):
         srr_folder_path = os.path.join(temp_zip_dir, crate_srr_value)
-        krona_files_list = self.generate_krona_files_list_elements(srr_folder_path)
+        if include_krona_files:
+            krona_files_list = self.generate_krona_files_list_elements(srr_folder_path)
+        else:
+            krona_files_list = ''
         published_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
         html = (
@@ -54,9 +58,18 @@ class RoCrateUIAssetsProvider:
             f"    <div id=\"contents\">\n"
             f"        <div class=\"data-entity\">\n"
             f"            <ul>\n"
-            f"                <li><a href=\"multiqc_report.html\" id=\"multiqc_report.html\">"
-            f"multiqc_report.html</a></li>\n"
-            f"                {krona_files_list}\n"
+        )
+
+        if include_multiqc_report:
+            html += (
+                f"                <li><a href=\"multiqc_report.html\" id=\"multiqc_report.html\">"
+                f"multiqc_report.html</a></li>\n"
+            )
+
+        if include_krona_files:
+            html += f"                {krona_files_list}\n"
+
+        html += (
             f"            </ul>\n"
             f"        </div>\n"
             f"    </div>\n"
