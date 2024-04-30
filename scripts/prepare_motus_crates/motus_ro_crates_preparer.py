@@ -109,15 +109,11 @@ class MotusRoCratesPreparer:
     def find_multiqc_report(self):
         srr_folder_path = self.get_srr_folder_path()
         self.multiqc_path = glob.glob(os.path.join(srr_folder_path, 'qc', 'multiqc', 'multiqc_report.html'))
-        # if not self.multiqc_path:
-        #     raise FileNotFoundError("multiqc_report.html not found in the extracted folder.")
 
     def find_krona_files(self):
         srr_folder_path = self.get_srr_folder_path()
         self.krona_files = [file for file in glob.glob(os.path.join(srr_folder_path, 'taxonomy', '*', 'krona.html'))
                             if not file.endswith('.DS_Store')]
-        # if not self.krona_files:
-        #     raise FileNotFoundError("No krona.html files found in the extracted folder.")
 
     def create_ro_crate_output_folder(self):
         self.ro_crate_output_folder_name = os.path.join(self.destination_folder_path, f"motus_{self.srr_value}")
@@ -166,9 +162,13 @@ class MotusRoCratesPreparer:
                 f.write(updated_krona_content)
 
     def create_ro_crate_preview_html(self):
+        include_krona_files = bool(self.krona_files)
+        include_multiqc_report = bool(self.multiqc_path)
         preview_content = self.ro_crate_asset_provider.generate_preview_html(self.srr_value,
                                                                              self.downloaded_ro_crate_zip_temp_dir,
-                                                                             self.ro_crate_metadata_html)
+                                                                             self.ro_crate_metadata_html,
+                                                                             include_krona_files,
+                                                                             include_multiqc_report)
         preview_html_path = os.path.join(self.ro_crate_output_folder_name, 'ro-crate-preview.html')
         with open(preview_html_path, 'w') as f:
             f.write(preview_content)
@@ -237,7 +237,7 @@ class MotusRoCratesPreparer:
             "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
         })
         metadata["@graph"].append({
-            "@id": f"{motus_id_prefix}ro-crate-preview.html",
+            "@id": "ro-crate-preview.html",
             "@type": "CreativeWork",
             "name": "ro-crate-preview.html",
             "datePublished": datetime.datetime.now().strftime("%Y-%m-%d"),
