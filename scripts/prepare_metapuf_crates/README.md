@@ -24,3 +24,9 @@ E.g.:
 ```bash
 python package_metapuf_as_crates.py examples/*.gff PXD005780
 ```
+
+Optionally, an output directory may be specified other than the default `./crates`:
+
+```bash
+python package_metapuf_as_crates.py examples/*.gff PXD005780 --output_dir my-crates-folder
+```

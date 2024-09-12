@@ -2,6 +2,7 @@ import argparse
 from datetime import datetime
 import glob
 import os
+from pathlib import Path
 import re
 from uuid import uuid4
 
@@ -57,7 +58,7 @@ class MGnifyPreview(Preview):
         out_html = src.render(crate=self.crate, context=context_entities, data=data_entities)
         return out_html
 
-def create_metapuf_rocrate(gff_path: str, pride_id: str):
+def create_metapuf_rocrate(gff_path: str, pride_id: str, crate_path: str):
     try:
         assembly = re.findall(r"ERZ[\d]*", gff_path)[0]
     except KeyError:
@@ -161,13 +162,14 @@ def create_metapuf_rocrate(gff_path: str, pride_id: str):
     for col in gff_cols:
         crate.root_dataset.append_to("variableMeasured", col)
 
-    crate.write_zip(f"./crates/metapuf_{sourcecode['version']}_{assembly}.zip")
+    crate.write_zip(Path(crate_path) / Path(f"metapuf_{sourcecode['version']}_{assembly}.zip"))
 
 
 def main():
     parser = argparse.ArgumentParser(description="Take MetaPUF-generated GFF files and create RO-Crates for each one.")
     parser.add_argument("gff_paths", type=str, help="Glob pattern for GFF files")
     parser.add_argument("pride_id", type=str, help="PRIDE ID for all assemblies")
+    parser.add_argument("--output_dir", type=str, help="Output directory for the crates", default="./crates")
 
     args = parser.parse_args()
 
@@ -175,7 +177,7 @@ def main():
 
     for gff_file in gff_files:
         print(f"Processing {gff_file}")
-        create_metapuf_rocrate(gff_file, args.pride_id)
+        create_metapuf_rocrate(gff_file, args.pride_id, args.output_dir)
 
 
 if __name__ == "__main__":
