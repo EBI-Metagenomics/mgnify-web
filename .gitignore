@@ -4,3 +4,11 @@
 .idea/
 *.DS_Store
 .task
+# Agent reports
+.mi/
+
+# Local development settings
+overrides/
+
+# Retain the removed submodule's existing local checkout.
+/sourmash-queue/

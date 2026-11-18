@@ -1,9 +1,6 @@
 [submodule "emgapi"]
 	path = emgapi
-	url = git@github.com:EBI-Metagenomics/emgapi.git
+	url = https://github.com/EBI-Metagenomics/emgapi-v2/
 [submodule "ebi-metagenomics-client"]
 	path = ebi-metagenomics-client
-	url = git@github.com:EBI-Metagenomics/ebi-metagenomics-client.git
-[submodule "sourmash-queue"]
-	path = sourmash-queue
-	url = git@github.com:EBI-Metagenomics/sourmash-queue.git
+	url = https://github.com/EBI-Metagenomics/ebi-metagenomics-client.git

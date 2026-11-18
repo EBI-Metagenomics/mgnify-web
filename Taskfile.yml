@@ -1,195 +1,35 @@
 version: '3'
 
+includes:
+  api:
+    taskfile: ./emgapi/Taskfile.yaml
+    dir: ./emgapi
+  client:
+    taskfile: ./Taskfile.client.yml
+    dir: ./ebi-metagenomics-client
+
+# The upstream dev-data task uses the emgapiv2_appdb volume name.
 env:
-  DOCKER_COMPOSE_FILE: docker-compose.yml
-  API_DOCKER_NAME: api
-  MONGO_DOCKER_NAME: mongodb
-  SOURMASH_QUEUE_DOCKER_NAME: sourmash-queue
-  EMG_CONTAINER_RESULT_PATH: /opt/emgapi/results
-  EMG_CONTAINER_FIXTURES_PATH: /opt/emgapi/fixtures
-  EMG_CONFIG_DEFAULT: "config/local-lite.yml"
-  EMG_CONFIG_TESTS: "config/local-tests.yml"
+  COMPOSE_PROJECT_NAME: emgapiv2
 
 tasks:
-  dc:
-    desc: "Run a docker compose subcommand, e.g. task dc -- down"
+  dev-init:
+    desc: Prepare local client settings and create API development data
     cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.CLI_ARGS}}
+      - task: client:configure
+      - task: api:make-dev-data
 
-  docker-compose-up:
-    desc: "Start the docker compose services."
-    summary: |
-      Which services are started depends on the DOCKER_COMPOSE_PROFILE env var.
-      See the docker-compose file for details.
-      You can also override the EMV_CONFIG env var to tell the API container to use a different YAML.
+  run:
+    desc: Run the API services and client together
     cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} --profile {{.DOCKER_COMPOSE_PROFILE | default "''"}} {{.DOCKER_ARGS}} up -d {{.DOCKER_COMPOSE_UP_FLAGS}} --remove-orphans --force-recreate
-    env:
-      EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
-    vars:
-      DOCKER_COMPOSE_PROFILE:
+      - task --parallel --concurrency 0 --output prefixed api:run client:run open-browser
 
-  manage:
-    desc: "Run Django manage.py subcommand, e.g. task manage -- makemigrations"
+  open-browser:
+    desc: Open the client and API pages in the browser
     cmds:
-      - docker compose exec -w /opt/emgapi {{.DOCKER_ARGS}} {{.API_DOCKER_NAME}} python3 emgcli/manage.py {{.ARGUMENTS}} {{.CLI_ARGS}}
-    env:
-      EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
+      - open http://localhost:9000/metagenomics/ http://localhost:8000
 
-  migrate:
-    desc: "Run Django migrate in the API container."
+  stop:
+    desc: Stop the API services
     cmds:
-      - task: docker-compose-up
-      - task: manage
-        vars:
-          ARGUMENTS: "migrate -v 3"
-
-  restore-mongo-test-db:
-    desc: "Writes the contents of the emg-testdb.mongoarchive fixtures into the containerized Mongo DB."
-    cmds:
-      - task: docker-compose-up
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongorestore --gzip --archive < ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
-    env:
-      EMG_CONFIG: "{{.EMG_CONFIG | default .EMG_CONFIG_DEFAULT}}"
-
-  run-api:
-    desc: "Starts the API django app and necessary services in docker."
-    cmds:
-      - task: docker-compose-up
-        vars:
-          DOCKER_COMPOSE_PROFILE: "{{.PROFILE}}"
-      - task: manage
-        vars:
-          ARGUMENTS: "collectstatic --noinput"
-      - task: manage
-        vars:
-          ARGUMENTS: "runserver 0.0.0.0:8000 --nostatic"
-          DOCKER_ARGS: "-d"
-
-  run-api-with-sourmash:
-    desc: "Starts the API django app, necessary services, as well as the Sourmash microservice and its dependencies."
-    cmds:
-      - task: run-api
-        vars:
-          PROFILE: "sourmash"
-
-  install-client-deps:
-    desc: "Runs npm install for the web client's dependencies."
-    cmds:
-      - npm install
-    dir: ebi-metagenomics-client
-    sources:
-      - ebi-metagenomics-client/package.json
-
-  run-client:
-    desc: "Runs the web client (in watch mode) as well as the API and neccesary services."
-    deps:
-      - install-client-deps
-      - run-api
-    cmds:
-      - source ebi-metagenomics-client/env-config.sh
-      - npm --prefix ebi-metagenomics-client run start --watch
-
-  test-api:
-    desc: "Runs the API test suite using Pytest."
-    summary: "Add arguments like `task test-api -- -k \"test_import\"` to select only some tests by dir/file/class/method."
-    cmds:
-      - task: docker-compose-up
-        vars:
-          DOCKER_COMPOSE_PROFILE: "tests"
-          EMG_CONFIG: "{{.EMG_CONFIG_TESTS}}"
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} {{.DOCKER_ARGS}} exec -w /opt/emgapi {{.API_DOCKER_NAME}} pytest {{.CLI_ARGS}}
-    env:
-      EMG_CONFIG: "{{.EMG_CONFIG_TESTS}}"
-
-  test-client-run:
-    desc: "Runs the web client test suite using cypress."
-    preconditions:
-      - sh: test -n "$(lsof -i :9000)"
-        msg: 'You need to run the client first. Use `task run-client`'
-    dir: ebi-metagenomics-client
-    cmds:
-      - npx cypress run --env API_URL=http://localhost:8000/v1 {{.CLI_ARGS}}
-
-  test-client-open:
-    desc: "Opens the web client test suite using cypress, for interactive testing."
-    preconditions:
-      - sh: test -n "$(lsof -i :9000)"
-        msg: 'You need to run the client first. Use `task run-client`'
-    dir: ebi-metagenomics-client
-    cmds:
-      - npx cypress open --env API_URL=http://localhost:8000/v1 --e2e
-
-  create-sourmash-test-index:
-    desc: "Creates a minimal sourmash index for use in development."
-    cmds:
-      - task: docker-compose-up
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/app/ {{.SOURMASH_QUEUE_DOCKER_NAME}} sourmash sketch dna --from-file test-data/human-gut-v2-0/all_fasta.txt --outdir /opt/sourmash/signatures/human-gut-v2-0 --name-from-first
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures/human-gut-v2-0 {{.SOURMASH_QUEUE_DOCKER_NAME}} sh -c "sourmash index -k 31 --scaled 1000 --dna genomes_index *.sig"
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T -w /opt/sourmash/signatures/human-gut-v2-0 {{.SOURMASH_QUEUE_DOCKER_NAME}}  unzip genomes_index.sbt.zip
-
-  create-test-dbs:
-    desc: "Creates minimal dev databases as sqlite/mongoarchive files."
-    cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} down
-      - rm ebi-metagenomics-client/ci/testdbs/emg-testdb.sqlite || echo
-      - rm ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive || echo
-      - rm ebi-metagenomics-client/ci/testdbs/ena-testdb.sqlite || echo
-      - task: docker-compose-up
-      - task: migrate
-      - task: manage
-        vars: { ARGUMENTS: 'create_ena_test_db' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_kegg_modules {{.EMG_CONTAINER_FIXTURES_PATH}}/kegg_module_orthology.json' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_kegg_classes {{.EMG_CONTAINER_FIXTURES_PATH}}/kegg_class_orthology.json' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_cog_descriptions {{.EMG_CONTAINER_FIXTURES_PATH}}/cog.csv' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_biomes {{.EMG_CONTAINER_FIXTURES_PATH}}/biome_hierarchy_tree.json'}
-      - task: manage
-        vars: { ARGUMENTS: 'import_variable_names {{.EMG_CONTAINER_FIXTURES_PATH}}/variable_names.json' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_analysis_statuses {{.EMG_CONTAINER_FIXTURES_PATH}}/analysis_statuses.json' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/uhgg/2.0 Human\ Gut 2.0 root:Host-associated:Human:Digestive\ system:Large\ intestine v1.2.1 prokaryotes' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/non-model-fish-gut/2.0 Non-Model\ Fish\ Gut 2.0 root:Host-associated:Fish:Digestive\ system v2.0.0 prokaryotes' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_genomes {{.EMG_CONTAINER_RESULT_PATH}} genomes/non-model-fish-gut-euks/1.0 Non-Model\ Fish\ Gut\ Eukaryotes 1.0 root:Host-associated:Fish:Digestive\ system v2.5.0 eukaryotes --catalogue_biome_label Non-Model\ Fish\ Gut' }
-      - task: manage  # Set genome catalogue details usually set in admin panel
-        vars:
-          ARGUMENTS:
-            sh: echo "shell -c \"$(cat scripts/create_test_db_helpers/update_genome_catalogue_metadata.py)\""
-      - task: manage
-        vars:
-          ARGUMENTS: 'createsuperuser --noinput --username emgtest --email emgtest@example.com'
-          DOCKER_ARGS: '-e DJANGO_SUPERUSER_PASSWORD=emgemgtesttest'
-      - task: manage
-        vars: { ARGUMENTS: 'import_analysis ERZ8153470 root:Host-associated:Human:Digestive\ system ASSEMBLY --rootpath /opt/emgapi/results --pipeline 5.0 --result_status full'}
-      - task: manage
-        vars: { ARGUMENTS: 'import_extra_assembly_annotations /opt/emgapi/results sanntis sanntis' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_extra_assembly_annotations /opt/emgapi/results crates/assembly-annotations rocrate' }
-      - task: manage
-        vars: { ARGUMENTS: 'import_extra_run_annotations /opt/emgapi/results crates/run-annotations rocrate' }
-      - task: manage  # Make a super study – usually done in admin panel
-        vars:
-          ARGUMENTS:
-            sh: echo "shell -c \"$(cat scripts/create_test_db_helpers/create_test_super_study.py)\""
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -T {{.MONGO_DOCKER_NAME}} mongodump --db emg --gzip --archive > ./ebi-metagenomics-client/ci/testdbs/emg-testdb.mongoarchive
-
-  bump-client-version:
-    desc: "Increments the version of web client. E.g. task bump-client-version -- patch"
-    summary: "The version part can be patch, minor, major"
-    cmds:
-      - npm version {{.CLI_ARGS | default "patch"}} --force --no-git-tag-version
-    dir: ebi-metagenomics-client
-
-  bump-api-version:
-    desc: "Increments the version of API. E.g. task bump-api-version -- patch"
-    summary: "The version part can be patch, minor, major"
-    deps:
-      - run-api
-    cmds:
-      - docker compose -f {{.DOCKER_COMPOSE_FILE}} exec -w /opt/emgapi -T {{.API_DOCKER_NAME}}  bumpversion bump -- {{.CLI_ARGS | default "patch"}}
+      - task: api:stop

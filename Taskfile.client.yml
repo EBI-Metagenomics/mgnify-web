@@ -1,0 +1,32 @@
+version: '3'
+
+tasks:
+  install:
+    desc: Install client dependencies
+    cmds:
+      - npm ci
+
+  configure:
+    desc: Create local API v2 config copies without changing the client checkout
+    cmds:
+      - node "{{.ROOT_DIR}}/scripts/configure-client.mjs"
+
+  run:
+    desc: Run the client development server
+    deps: [configure]
+    preconditions:
+      - sh: test -x node_modules/.bin/vite
+        msg: Run task client:install first
+    cmds:
+      - npm run start -- --config "{{.ROOT_DIR}}/scripts/vite.local.config.mjs" {{.CLI_ARGS}}
+
+  build:
+    desc: Build the client with local API v2 settings
+    deps: [configure]
+    cmds:
+      - npm run build -- --config "{{.ROOT_DIR}}/scripts/vite.local.config.mjs" {{.CLI_ARGS}}
+
+  test:
+    desc: Run the client Cypress tests against a running client
+    cmds:
+      - npm run cy:test:run -- {{.CLI_ARGS}}
